@@ -23,6 +23,9 @@ libraryDependencies ++= Seq(
 libraryDependencies ++= Seq(
   "org.ow2.asm" % "asm" % "9.5"
 )
+libraryDependencies ++= Seq(
+  "org.ow2.asm" % "asm-tree" % "9.5"
+)
 
 Compile / resourceDirectories += (
   baseDirectory.value / "src" / "main" / "resources"
