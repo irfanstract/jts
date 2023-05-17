@@ -145,12 +145,12 @@ def wsnImpl() = {
          .getSimpleName()
       })
 
-      val methodsByTsDescs = {
+      val methodsByTsDescMap = {
          import language.unsafeNulls
          import scala.jdk.CollectionConverters.*
          cRevisited.methods.asScala
          .toIndexedSeq
-         .map(m => (
+         .map(m => ((
             NativeSigImpl(
                access = m.access ,
                name = m.name ,
@@ -161,8 +161,13 @@ def wsnImpl() = {
                   )
                ) ,
             )
-         ))
-         // ???
+         ), m ))
+         .toMap
+      }
+      val methodsByTsDescs = {
+         methodsByTsDescMap
+         .toSet
+         .map((m, _) => m )
       }
 
       val hideworthyMethods = (
@@ -252,7 +257,7 @@ def wsnImpl() = {
           * unconditionally
           * 
           */
-         def printXClassMethodDefUnconditionally(dsc10: NativeSigImpl) = {
+         def printXClassMethodDefUnconditionally(dsc10: NativeSigImpl, code: Null | org.objectweb.asm.tree.MethodNode) = {
             import cbsq.meta.asm.jvmc.toJsMethodDeclString
             import cbsq.meta.asm.jvmc.{isSynthetic, isEffectivelyPrivate}
             val dsc1 = (
@@ -335,10 +340,9 @@ def wsnImpl() = {
          o.printXTc39sObjectPrototypeHolyGrailDisabled()
          o.println()
          o.println()
-         for (dsc10 <- (
-            methodsByTsDescs
-            .toSet[NativeSigImpl]
-            .--(hideableMethodsEffectively )
+         for ((dsc10, code10B) <- (
+            methodsByTsDescMap
+            .filterKeys(hideableMethodsEffectively.contains _ )
             .toSeq
             .sortBy((identity[NativeSigImpl]).andThen({
                case e => 
@@ -354,9 +358,9 @@ def wsnImpl() = {
                      // "\\$(?!tupled)".r.findFirstIn(nm).nonEmpty ,
                      nm ,
                   )
-            }))
+            }).compose[(NativeSigImpl, org.objectweb.asm.MethodVisitor)](_._1))
          )) {
-            o.printXClassMethodDefUnconditionally(dsc10)
+            o.printXClassMethodDefUnconditionally(dsc10, code = null)
          }
          o.println()
          locally {
