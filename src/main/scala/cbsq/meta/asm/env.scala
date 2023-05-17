@@ -32,6 +32,10 @@ def stdOutWriter(o: java.io.OutputStream) : java.io.Writer = {
    new java.io.OutputStreamWriter(o)
 }
 
+export cbsq.meta.util.PwEmitter
+
+
+
 
 
 
