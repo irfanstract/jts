@@ -58,6 +58,7 @@ def fcv(o: java.io.PrintWriter) : ow.ClassVisitor = {
                      access = access ,
                      name = name ,
                      descriptor = descriptor ,
+                     signature = Option(signature) getOrElse(descriptor) ,
                   )
                ))
             ))
@@ -177,14 +178,14 @@ def wsnImpl() = {
       override
       type WMNs <: Nothing
 
-      val hideableMethods = (
+      val hideworthyMethods = (
             methodsByTsDescs
             .filter(e => {
                e.isEffectivelyPrivate()
             })
       )
       val hideableMethodsEffectively = (
-            if canDropPrivateMethod then hideableMethods
+            if canDropPrivateMethod then hideworthyMethods
             else Set()
       )
 
@@ -209,12 +210,14 @@ def wsnImpl() = {
             o.println(s"   * ")
             o.println(s"   * ")
             o.println(s"   * @note  ")
-            o.println(s"   *    output by/from J2JS. ")
+            // o.println(s"   *    output by/from J2JS. ")
             // o.println(s"   *    needs be *async* due to how JS works. ")
             o.println(s"   *    sig in the original bytecode: ")
-            o.println(s"   *    `${dsc10.toShortString() }`. ")
+            o.println(s"   *    `${dsc10.toShortString()(using NativeSigImpl.Fmtct(generics = false ) ) }`. ")
+            o.println(s"   *    `${dsc10.toShortString()(using NativeSigImpl.Fmtct(generics = true ) ) }`. ")
             o.println(s"   * ")
             o.println(s"   */ ")
+            o.println(s"  /* the return-type varies depending on actual 'args' */ ")
             o println (dsc1.replaceFirst("\\A\\s*", "  ") )
             o.println()
          }
@@ -249,7 +252,7 @@ def wsnImpl() = {
                      acc.&(Opcodes.ACC_SYNTHETIC) ,
                      acc.&(Opcodes.ACC_STATIC) ,
                      "public protected package-private".indexOf(e.visibility ) & ~Int.MinValue ,
-                     nm.contains("$") ,
+                     "\\$(?!a?sync(?:hronous|)|\\d+\\z)".r.findFirstIn(nm).nonEmpty ,
                      nm ,
                   )
             }))
@@ -280,6 +283,8 @@ def wsnImpl() = {
 
 export cbsq.meta.asm.jvmc.withJsSpecificMethods 
 
+export cbsq.meta.asm.jvmc.asMakingAsyncMonadifiedVariants
+
 trait Sgde
 {
    val needsExportAssignment: Boolean
@@ -294,7 +299,8 @@ def fcvDemo101(): Unit = {
       // getClass()
       // .getResource("/jbc-transform/samples/bytebuffers1$package$ByteBlob$.class")
       getClass()
-      .getResource("/jbc-transform/samples/byteManipImplicits$.class")
+      // .getResource("/jbc-transform/samples/byteManipImplicits$.class")
+      .getResource("/jbc-transform/samples/bytebuffers1$package$ByteBlob$.class")
    )
    val cr = (
       new org.objectweb.asm.ClassReader((
@@ -309,6 +315,7 @@ def fcvDemo101(): Unit = {
          .asPrintWriter()
       ) )
       .withJsSpecificMethods()
+      .asMakingAsyncMonadifiedVariants()
    ) , org.objectweb.asm.ClassReader.SKIP_FRAMES )
 }
 

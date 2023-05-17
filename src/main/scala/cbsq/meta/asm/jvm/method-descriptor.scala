@@ -15,8 +15,11 @@ package cbsq.meta.asm.jvm
 
 
 
-case class MethodDescriptorImpl1(access: Int, name: String, descriptor: String) 
+case class MethodDescriptorImpl1(access: Int, name: String, descriptor: String, signature: String) 
 {
+
+   descriptor.nn
+   signature.nn
 
    /**
     * 
@@ -40,11 +43,20 @@ case class MethodDescriptorImpl1(access: Int, name: String, descriptor: String)
    def toNameAndParamsReturnsString(
       simplify: Boolean = true ,
       
-   ): String = {
-      val descriptorFmatted = (
-         org.objectweb.asm.Type.getType(descriptor) match {
-
-            case d =>
+   )(using MethodDescriptorImpl1.Fmtct): String = {
+      val sgnAnalysis = {
+         Esig(signature)
+         .analyse()
+      }
+      extension (sig0 : Esig) {
+         def erasedIfAskedTo: Esig = {
+            if (summon[MethodDescriptorImpl1.Fmtct ].generics) sig0
+            else sig0.asErased()
+         }
+      }
+      // import sgnAnalysis.{pt0, ptypes0, rt0}
+      val descriptorFmatted = {
+               ;
                import MethodDescriptorImpl1.SIMPLENAME
                val simplifiedIfDesired = (
                   if (simplify) SIMPLENAME
@@ -53,22 +65,21 @@ case class MethodDescriptorImpl1(access: Int, name: String, descriptor: String)
                ""
                .++("(")
                .++((
-                  d.getArgumentTypes().toIndexedSeq
-                  .map(_.getDescriptor())
+                  (sgnAnalysis.ptypes0).toIndexedSeq
+                  .map(_.erasedIfAskedTo)
+                  .map((_: Esig).value)
                   .map(simplifiedIfDesired)
                   .map(_ + ",")
                   .mkString("")
                ) : String)
                .++(")")
                .++(": ")
-               .++(simplifiedIfDesired(d.getReturnType().toString() ) : String )
-               
-         }
-      )
+               .++(simplifiedIfDesired((sgnAnalysis.rt0.erasedIfAskedTo.value).toString() ) : String )
+      }
       s"$name$descriptorFmatted"
    }
 
-   def toMultilineString(): String = {
+   def toMultilineString()(using MethodDescriptorImpl1.Fmtct): String = {
       toNameAndParamsReturnsString()
       .prependedAll((
          Modifier(access)
@@ -77,7 +88,7 @@ case class MethodDescriptorImpl1(access: Int, name: String, descriptor: String)
    }
 
    // override
-   def toShortString(): String = {
+   def toShortString()(using MethodDescriptorImpl1.Fmtct): String = {
       /**
        * 
        * for brevity,
@@ -98,7 +109,7 @@ case class MethodDescriptorImpl1(access: Int, name: String, descriptor: String)
 
    override
    def toString(): String = {
-      toShortString()
+      toShortString()(using MethodDescriptorImpl1.Fmtct(generics = false ) )
       .++(" --")
       .appendedAll(" " + (
          Modifier(access)
@@ -138,7 +149,7 @@ object MethodDescriptorImpl1
       ) )
       .andThen(t => (
          t
-         .replaceFirst("(\\[*L)", "$1" + java.util.regex.Matcher.quoteReplacement("/") )
+         .replaceAll("(\\[*L(?!azy|at|ine|ind|ink|int|ist|iter|itr|ock|one|ove|ut))", "$1" + java.util.regex.Matcher.quoteReplacement("/") )
       ) )
       .andThen(t => (
          t
@@ -146,6 +157,10 @@ object MethodDescriptorImpl1
          .replaceAll("\\/", ".")
       ) )
    )
+
+   // opaque type Egn <: Boolean = Boolean
+   // given [T <: Boolean : ValueOf] : (Egn & T) = valueOf[T]
+   case class Fmtct(generics: Boolean )
    
 }
 

@@ -21,4 +21,43 @@ util.Try {
    .getArgumentTypes()
 }
 
+{
+   import  cbsq.meta.asm.jvmc.*
+   Esig("Ljava/lang/Runnable;")
+   // .asFuturified
+   .asMonoFuturified
+}
+{
+   import  cbsq.meta.asm.jvmc.*
+   Esig("Ljava/lang/Runnable;")
+   // .asFutureMonadified
+   .asMonoFutureMonadified
+}
+
+{
+   import  cbsq.meta.asm.jvmc.*
+   trait L1[C[A] <: Eoft[A] ] 
+}
+
+math.random()
+
+{
+   import  cbsq.meta.asm.jvmc.*
+   Esig("()Ljava/lang/Runnable;")
+   // .asFutureMonadified
+   .withMappedReturnType([E <: OwtBase ] => (e: E) => e.asMonoFutureMonadified )
+}
+{
+   import  cbsq.meta.asm.jvmc.*
+   Esig("(Z)[J").withMappedReturnType([E <: OwtBase ] => (e: E) => e.asMonoFutureMonadified )
+}
+{
+   import  cbsq.meta.asm.jvmc.*
+   ow.Type.getType("(Z)[J").withMappedReturnType([E <: OwtBase ] => (e: E) => e.asMonoFutureMonadified )
+}
+{
+   import  cbsq.meta.asm.jvmc.*
+   Esig("()V").withMappedReturnType([E <: OwtBase ] => (e: E) => e.asMonoFutureMonadified )
+}
+
 

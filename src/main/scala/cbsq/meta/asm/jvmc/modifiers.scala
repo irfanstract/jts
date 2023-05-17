@@ -30,7 +30,7 @@ extension (this1: MethodDescriptorImpl1) {
             val argsTypeRef = (
                name
                // .toUpperCase(java.util.Locale.ROOT)
-               .prependedAll("$$Args$$")
+               // .prependedAll("$$Args$$")
                .appendedAll("$" + (name + descriptor).hashCode().&(~Int.MinValue) )
                .replaceAll("\\W", java.util.regex.Matcher.quoteReplacement("$") )
             )
@@ -42,6 +42,7 @@ extension (this1: MethodDescriptorImpl1) {
             import org.objectweb.asm.Opcodes
             val argsTypeRef = (
                this1.computeCompiledArgsTypeName()
+               .appendedAll("$Args")
             )
             (
                "" + ({
@@ -63,8 +64,12 @@ extension (this1: MethodDescriptorImpl1) {
                               if (name.matches("\\<init\\>|clone|equals|hashCode|toArray|to(?:Locale)?String|valueOf") ) then
                                  "unknown"
                               else {
+                                 import util.matching.Regex.{quote, quoteReplacement}
                                  // "Promise<unknown>"
-                                 "undefined | null | {}"
+                                 // "undefined | null | {}"
+                                 argsTypeRef
+                                 .replaceFirst("\\z" prependedAll(quote("$Args").prependedAll("(?:").++(")?") ), quoteReplacement("$Return"))
+                                 .++("<typeof args>")
                               }
                            )
                            name match {
