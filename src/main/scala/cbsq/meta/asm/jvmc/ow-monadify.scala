@@ -212,6 +212,14 @@ extension (dest: org.objectweb.asm.ClassVisitor) {
                   })
                   .orNull 
                )
+               /**
+                * 
+                * not all methods deserve one
+                * (eg *synthetic methods*, `&lt;clinit>`, *package-private* ones, `equals`, `hashCode`, `finalize`), and
+                * different methods may need differentiated mangling-scheme
+                * (eg `&lt;init>`, `of`, `from` )
+                * 
+                */
                name match {
 
                   case "<clinit>" =>
