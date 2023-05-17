@@ -18,44 +18,41 @@ package cbsq.meta.util
 
 
 
+@deprecatedInheritance("subject to change")
 trait PwEmitter
-// extends
-// `Pwe%!`
+extends
+`Pwe%!`
 {
    
+   override 
    def printTo(o: java.io.PrintWriter) : Unit
 
-   // opaque type SpecialString <: String = String
+}
 
-   // /**
-   //  * 
-   //  * the string repr --
-   //  * runs `printTo`
-   //  * 
-   //  */
-   // override
-   // def toString(): SpecialString = {
-   //    val o = new java.io.StringWriter
-   //    printTo((
-   //       new java.io.PrintWriter(o, true)
-   //    ))
-   //    o.toString()
-   // }
+@deprecatedInheritance("subject to change")
+abstract class `Pwe%!` protected ()
+{
+
+   def printTo(o: java.io.PrintWriter) : Unit
+
+   /**
+    * 
+    * the string repr --
+    * runs `printTo`
+    * 
+    */
+   override
+   inline
+   def toString(): String = {
+      val o = new java.io.StringWriter
+      printTo((
+         new java.io.PrintWriter(o, true)
+      ))
+      o.toString()
+   }
 
 }
-// trait Pwes 
-// { this : PwEmitter =>
-// 
-//    type SpecialString <: String
-//    
-//    override
-//    def toString(): SpecialString
-// 
-// }
-// abstract class `Pwe%!`
-// { this : PwEmitter =>
 
-// }
 object PwEmitter {
 
    // type `%!` = `Pwe%!`
@@ -87,29 +84,12 @@ object PwEmitter {
    }
 
    def through(f: PwuF) : PwEmitter = {
-      new AnyRef with PwEmitter {
+      new PwEmitter {
 
          def printTo(o: java.io.PrintWriter) : Unit = {
             f(o)
          }
 
-         type SpecialString >: String <: String
-
-         /**
-          * 
-          * the string repr --
-          * runs `printTo`
-          * 
-          */
-         override
-         def toString(): SpecialString = {
-            val o = new java.io.StringWriter
-            printTo((
-               new java.io.PrintWriter(o, true)
-            ))
-            o.toString()
-         }
-         
       }
    }
 

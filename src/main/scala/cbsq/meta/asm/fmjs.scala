@@ -37,30 +37,33 @@ def fcv(o: java.io.PrintWriter) : ow.ClassVisitor = {
       def visit(version: Int, access: Int, name: String, signature: String, superName: String, interfaces: Array[String]): Unit = {
          ;
          import org.objectweb.asm.Type
-         s = (
+         s = ({
+            import language.unsafeNulls
             s.withNewFullName(
                ownName             = Type.getObjectType(name) ,
                superclassName      = Type.getObjectType(superName) ,
                superInterfaces     = interfaces.toIndexedSeq.map(Type.getObjectType _ ) ,
             )
-         )
+         })
       }
       
       override
-      def visitMethod(access: Int, name: String, descriptor: String, signature: String, exceptions: Array[String]): ow.MethodVisitor = {
+      def visitMethod(access: Int, name: String, descriptor: String, signature: Null | String, exceptions: Array[String]): ow.MethodVisitor = {
          import org.objectweb.asm.Opcodes
          s = ((s: Wsn) => (
             s
             .withAddedMethodByNativeSig((
                s
-               .translateIntoNativeSig((
-                  cbsq.meta.asm.jvm.MethodDescriptorImpl1(
+               .translateIntoNativeSig(({
+                  import cbsq.meta.asm.jvm.MethodDescriptorImpl1
+                  MethodDescriptorImpl1(
                      access = access ,
                      name = name ,
-                     descriptor = descriptor ,
-                     signature = Option(signature) getOrElse(descriptor) ,
+                     descriptor0 = (
+                        MethodDescriptorImpl1.Bds(descriptor, signature)
+                     ) ,
                   )
-               ))
+               }))
             ))
          ))(s)
          new org.objectweb.asm.MethodVisitor(org.objectweb.asm.Opcodes.ASM9 ) {}
@@ -94,15 +97,17 @@ def wsnImpl() = {
    ) extends AnyRef with Wsn 
    {
 
-      val simpleName = (
+      val simpleName = ({
+         import language.unsafeNulls
          ow.Type.getObjectType(name)
          .getSimpleName()
-      )
+      })
 
-      val superclassSimpleName = (
+      val superclassSimpleName = ({
+         import language.unsafeNulls
          ow.Type.getObjectType(superName)
          .getSimpleName()
-      )
+      })
 
       type Derived >: Wsn <: Wsn
       
@@ -111,9 +116,10 @@ def wsnImpl() = {
          superclassName     : ow.Type,
          superInterfaces    : IndexedSeq[ow.Type]
       ): Derived = {
+         import language.unsafeNulls
          copy(
-            name = ownName.getInternalName() ,
-            superName = superclassName.getInternalName() ,
+            name      = (ownName        ).getInternalName() ,
+            superName = (superclassName ).getInternalName() ,
          )
       }
       
@@ -226,6 +232,7 @@ def wsnImpl() = {
 
       val distilledFormPwEmitter = (
       WsnPwEmitter((o: java.io.PrintWriter) => {
+         import language.unsafeNulls
          val baseTemplate = (
             getBaseTemplate()
          )
@@ -300,18 +307,18 @@ def fcvDemo101(): Unit = {
       // .getResource("/jbc-transform/samples/bytebuffers1$package$ByteBlob$.class")
       getClass()
       // .getResource("/jbc-transform/samples/byteManipImplicits$.class")
-      .getResource("/jbc-transform/samples/bytebuffers1$package$ByteBlob$.class")
+      .getResource("/jbc-transform/samples/bytebuffers1$package$ByteBlob$.class").nn
    )
    val cr = (
       new org.objectweb.asm.ClassReader((
          path
-         .openStream()
+         .openStream().nn
       ))
    )
    cr
    .accept((
       fcv((
-         stdOutWriter(System.out)
+         stdOutWriter(System.out.nn)
          .asPrintWriter()
       ) )
       .withJsSpecificMethods()

@@ -105,6 +105,7 @@ extension (sig0 : Esig) {
                   override
                   def visitReturnType() = {
                      ({
+                        import language.unsafeNulls
                         val t = super.visitReturnType()
                         t.visitBaseType('V')
                      })

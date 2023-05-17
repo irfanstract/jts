@@ -29,19 +29,21 @@ extension (dest: org.objectweb.asm.ClassVisitor) {
             try {
                ({
                   val v1 = (
-                     cv.visitMethod({
+                     cv.nn
+                     .visitMethod({
                         import org.objectweb.asm.Opcodes
                         Opcodes.ACC_PUBLIC
-                     }, "toLocaleString", "()Ljava/lang/String;", null, Array.empty )
+                     }, "toLocaleString", "()Ljava/lang/String;", null, Array.empty ).nn
                   )
                   v1.visitEnd()
                })
                ({
                   val v1 = (
-                     cv.visitMethod({
+                     cv.nn
+                     .visitMethod({
                         import org.objectweb.asm.Opcodes
                         Opcodes.ACC_PROTECTED | Opcodes.ACC_SYNTHETIC
-                     }, "2$meta$toStringTag", "()Ljava/lang/String;", null, Array.empty )
+                     }, "2$meta$toStringTag", "()Ljava/lang/String;", null, Array.empty ).nn
                   )
                   v1.visitEnd()
                })

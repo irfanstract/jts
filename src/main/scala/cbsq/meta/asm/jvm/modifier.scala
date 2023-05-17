@@ -61,6 +61,9 @@ case class Modifier(value: Int) {
    override
    def toString(): String = {
       
+                  ;
+                  import language.unsafeNulls
+                  
                   import org.objectweb.asm.Opcodes
                   // ""
                   // .replaceFirst("\\A", (

@@ -15,9 +15,31 @@ package cbsq.meta.asm.jvm
 
 
 
-case class MethodDescriptorImpl1(access: Int, name: String, descriptor: String, signature: String) 
+/**
+ * 
+ * quick info about its *mod-bits*, *name*, *params*, *return-type*
+ * 
+ *
+ * @param access
+ * @param name
+ * @param descriptor
+ * @param signature - if not available then can be same as `descriptor`
+ * 
+ */
+case class MethodDescriptorImpl1(
+   access: Int,
+   name: String, 
+   descriptor0: MethodDescriptorImpl1.Bds,
+) 
 {
+   
+   export descriptor0.{descriptor, signature }
 
+   /**
+    * without the build flag `-Yexplicit-nulls`
+    * one can pass `null` in place of concrete `String` --
+    * i don't want it ☹
+    */
    descriptor.nn
    signature.nn
 
@@ -89,6 +111,7 @@ case class MethodDescriptorImpl1(access: Int, name: String, descriptor: String, 
 
    // override
    def toShortString()(using MethodDescriptorImpl1.Fmtct): String = {
+      import language.unsafeNulls
       /**
        * 
        * for brevity,
@@ -109,6 +132,7 @@ case class MethodDescriptorImpl1(access: Int, name: String, descriptor: String, 
 
    override
    def toString(): String = {
+      import language.unsafeNulls
       toShortString()(using MethodDescriptorImpl1.Fmtct(generics = false ) )
       .++(" --")
       .appendedAll(" " + (
@@ -120,21 +144,43 @@ case class MethodDescriptorImpl1(access: Int, name: String, descriptor: String, 
 
 }
 
-extension [This <: MethodDescriptorImpl1](this1: This) {
-
-   def isSynthetic: Boolean = {
-      import org.objectweb.asm.Opcodes
-      (this1.access & Opcodes.ACC_SYNTHETIC) != 0
-   }
-
-}
+export MethodDescriptorImpl1.isSynthetic
 
 object MethodDescriptorImpl1
 {
 
+   extension [This <: MethodDescriptorImpl1](this1: This) {
+
+      def isSynthetic: Boolean = {
+         import org.objectweb.asm.Opcodes
+         (this1.access & Opcodes.ACC_SYNTHETIC) != 0
+      }
+
+   }
+
    //
    
-   val SIMPLENAME = (
+   sealed 
+   case class Bds private[MethodDescriptorImpl1] (
+      val descriptor : String ,
+      val signature  : String ,
+   )
+   object Bds {
+
+      def apply(
+         descriptor : String ,
+         signature0 : Null | String ,
+      ) : Bds = {
+         new Bds(
+            descriptor = descriptor , 
+            signature = if (signature0 != null) signature0 else descriptor ,
+         )
+      }
+
+   }
+   
+   val SIMPLENAME = ({
+      import language.unsafeNulls
       ({
             case v if (v.length() == 1 || v.matches("\\[+.")) =>
                java.lang.invoke.MethodType.fromMethodDescriptorString(s"()$v", null)
@@ -156,7 +202,7 @@ object MethodDescriptorImpl1
          .replaceAll("(L)\\/", "$1:")
          .replaceAll("\\/", ".")
       ) )
-   )
+   })
 
    // opaque type Egn <: Boolean = Boolean
    // given [T <: Boolean : ValueOf] : (Egn & T) = valueOf[T]

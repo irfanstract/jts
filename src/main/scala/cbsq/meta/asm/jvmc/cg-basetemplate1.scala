@@ -112,6 +112,8 @@ class wsnImplCtx1() {
           */
          def getSimpleName(): String = {
                   ;
+                  import language.unsafeNulls
+                  ;
                   // TODO
                   val name = (
                      /* avoids the "L" and ";" */
@@ -129,6 +131,7 @@ class wsnImplCtx1() {
           *
           */
          def getCanonicalName(): String = {
+            import language.unsafeNulls   /* a lot of vanilla Java stuffs */
             name0.getInternalName()
             .replace("/", ".")
          }
@@ -152,24 +155,28 @@ class wsnImplCtx1() {
       }
 
       def getBaseTemplate() = {
+         import language.unsafeNulls   /* a lot of vanilla Java stuffs */
+         import cbsq.meta.util.PwEmitter
          val baseTemplate = (
-         WsnPwEmitter.through((o) => {
+         PwEmitter.through((o) => {
             val essentialLogicalPreamble = (
                Seq()
                .:+((
                   Seq()
-                  .:+("/* ")
-                  .:+(" * ")
-                  .:+(" * generated code. ")
-                  .:+(" * avoid editing this file as ALL CHANGES will GO AWAY due to re-generation. ")
-                  .:+(" * ")
+                  .:+("/*                           ")
+                  .:+(" *                           ")
+                  .:+(" * auto-generated --        ") 
+                  .:+(" * ALL CHANGES will GO AWAY ")
+                  .:+(" *                           ")
                   .:+(" */ ")
                   .mkString("\r\n")
+                  .stripTrailing()
                ))
                .:+("\"use strict\" ; ")
                .:+("declare const rootPkg : typeof global ; ")
                .:+("     ")
                .mkString("\r\n")
+               .stripTrailing()
             )
             o println essentialLogicalPreamble
             o.println()

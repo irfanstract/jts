@@ -11,168 +11,8 @@ package cbsq.meta.asm.jvmc
 
 
 
-type OwtBase
-   >: org.objectweb.asm.Type | Esig
-   <: org.objectweb.asm.Type | Esig
 
-type Eoft[A] <: OwtBase = A match {
-   case org.objectweb.asm.Type =>
-        org.objectweb.asm.Type
-   case Esig =>
-        Esig
-}
 
-extension [A <: OwtBase](sig0: A) {
-   
-   /**
-    * 
-    * `A1.class monoAppliedToGenericType A2.class`
-    * would yield `A1&lt;? extends A2>.class`
-    * 
-    * 
-    * @param variance override the default variance (which's `+`)
-    * 
-    */
-   def monoAppliedToGenericType(
-      sv: org.objectweb.asm.Type ,
-
-      variance: '+' | '-' | '=' = '+' ,
-
-   ): Eoft[A] = {
-      sig0 match {
-
-         case sig0 : org.objectweb.asm.Type =>
-            /**
-             * oh, and JVM *types* don't maintain type-arguments, so
-             * we'll have to ignore `sig0` XD
-             */
-            sv
-            
-         case sig0 : Esig =>
-            val Esig(sig) = sig0
-
-            val scv = (
-               new org.objectweb.asm.signature.SignatureWriter()
-            )
-            
-            scv visitClassType(sv.getInternalName() )
-            (scv visitTypeArgument(variance ) )
-               .visitXSig(sig )
-            scv.visitEnd()
-            
-            Esig(scv.toString() )
-            
-      }
-   }
-
-   def withMappedReturnType(applyTx: [A1 <: OwtBase] => A1 => Eoft[A1] ): Eoft[A] = {
-      sig0 match {
-
-         case type1 : org.objectweb.asm.Type =>
-            /**
-             * oh, and JVM *types* don't maintain type-arguments, so
-             * we'll have to ignore `sig0` XD
-             */
-            type1.getSort() match {
-               
-               case ow.Type.METHOD =>
-                  val returnType = (
-                     type1.getReturnType()
-                  )
-                  val argTypes = (
-                     type1.getArgumentTypes()
-                     .toIndexedSeq
-                  )
-                  org.objectweb.asm.Type.getMethodType((
-                     applyTx[org.objectweb.asm.Type](returnType)
-                  ), argTypes.toArray : _* )
-                  
-            }
-            
-         case sig0 : Esig =>
-            val analysis = (
-               sig0.analyse()
-            )
-            import analysis.sig
-            
-            import analysis.pt0
-            
-            import analysis.rt0
-            
-            val rt1 = applyTx[Esig](rt0 )
-            
-            Esig(s"${pt0.value.dropRight(1) }${rt1.value }" )
-            
-      }
-   }
-
-}
-
-object jPairsOwClassTags {
-   
-   val ofTuples = (
-      /* a fictituous type `java/lang/Tuple` being variadic */
-      ow.Type.getObjectType("java/lang/Tuple")
-   )
-   
-}
-
-object jFuturesOwClassTags {
-
-   val ofFutures = (
-      // ow.Type.getObjectType("java/util/concurrent/Future")
-      ow.Type.getType(classOf[java.util.concurrent.Future[?] ] )
-   )
-   
-   val ofCompletionStages = (
-      ow.Type.getType(classOf[java.util.concurrent.CompletionStage[?] ] )
-   )
-   
-   val ofFlowPublisher = (
-      ow.Type.getType(classOf[java.util.concurrent.Flow.Publisher[?] ] )
-   )
-   
-}
-
-extension [A <: OwtBase](sig0: A) {
-
-   /**
-    * 
-    * `A` become `Future&lt;A>`
-    * 
-    */
-   def asMonoFuturified : Eoft[A] = {
-      sig0 monoAppliedToGenericType jFuturesOwClassTags.ofFutures
-   }
-   
-   /**
-    * 
-    * `A` become `CompletionStage&lt;A>`
-    * 
-    */
-   def asMonoFutureMonadified : Eoft[A] = {
-      sig0 monoAppliedToGenericType jFuturesOwClassTags.ofCompletionStages
-   }
-   
-   /**
-    * 
-    * `(...)A` become `(...)CompletionStage&lt;A>`
-    * 
-    */
-   def asReturnValueFutureMonadified : Eoft[A] = {
-      sig0 withMappedReturnType([A <: OwtBase] => (t: A) => t.asMonoFutureMonadified )
-   }
-   
-   /**
-    * 
-    * `A` become `Flow.Publisher&lt;A>`
-    * 
-    */
-   def asMonoFlewified : Eoft[A] = {
-      sig0 monoAppliedToGenericType jFuturesOwClassTags.ofFlowPublisher
-   }
-   
-}
 
 extension (dest: org.objectweb.asm.ClassVisitor) {
 
@@ -186,32 +26,77 @@ extension (dest: org.objectweb.asm.ClassVisitor) {
     *
     */
    def asMakingAsyncMonadifiedVariants() : org.objectweb.asm.ClassVisitor = {
-      new org.objectweb.asm.ClassVisitor(ow.Opcodes.ASM9, dest) {
+      import org.objectweb.asm
+      import cbsq.meta.asm.jvm.*
+      /**
+       * 
+       * whether the output would-be `.d.ts` file,
+       * rather than regular `.ts` or `.js`
+       * 
+       */
+      val isForTypeDeclarationFile : Boolean = true
+      new asm.ClassVisitor(asm.Opcodes.ASM9, dest) {
 
-         
+
+         lazy val forInterfaces : Boolean = {
+            forInterfacesP.future
+            .value.getOrElse(throw IllegalStateException("NF") ).get
+         }
+         val forInterfacesP = concurrent.Promise[Boolean]
+
          override
-         def visitMethod(access: Int, name: String, descriptor: String, signature: String, exceptions: Array[String]): ow.MethodVisitor = {
+         def visit(version: Int, access: Int, name: String | Null, signature: String | Null, superName: String | Null, interfaces: Array[String | Null] | Null): Unit = {
+            import asm.Opcodes
+            forInterfacesP
+            .success((
+               access.&(Opcodes.ACC_INTERFACE | Opcodes.ACC_ANNOTATION) 
+               != 0
+            ))
+            super.visit(version, access, name, signature, superName, interfaces)
+         }
+
+         override
+         def visitMethod(access: Int, name: String | Null, descriptor: String | Null, givenSignature: String | Null, exceptions: Array[String | Null] | Null): asm.MethodVisitor | Null = {
+            //
             try {
-               cv.visitMethod(access, name           , {
+               cv.nn
+               .visitMethod(access, name, {
                   descriptor
                }, {
-                  signature
+                  givenSignature
                }, exceptions)
             } finally {
-               val asyncifiedNd = {
-                  ow.Type.getType(descriptor)
-                  .asReturnValueFutureMonadified
-                  .getDescriptor()
-               }
-               val asyncifiedSignature = (
-                  Option(signature)
-                  .map(signature => {
+               val signature = (
+                  Some(givenSignature).collect({ case e : String => e })
+                  .orElse[String](Some(descriptor.nn) )
+                  .getOrElse(throw IllegalArgumentException("both null"))
+               )
+               /**
+                * 
+                * *the descriptor* and *the signature* needs to be consistent ;
+                * the *compute the signature* needs to happen first, and then
+                * do *compute the erasure of the obtained signt*
+                * 
+                * here's *the signature*
+                * 
+                */
+               val asyncifiedSignature = ({
+                  ({
                      Esig(signature)
                      .asReturnValueFutureMonadified
                      .value
                   })
-                  .orNull 
-               )
+               })
+               /**
+                * 
+                * here's *the type-erased signature*
+                * 
+                */
+               val asyncifiedNd = {
+                  Esig(asyncifiedSignature)
+                  .asErased()
+                  .value
+               }
                /**
                 * 
                 * not all methods deserve one
@@ -222,28 +107,32 @@ extension (dest: org.objectweb.asm.ClassVisitor) {
                 */
                name match {
 
-                  case m if (access.&(ow.Opcodes.ACC_SYNTHETIC) != 0 ) =>
+                  /**
+                   * 
+                   */
+                  case m if (isForTypeDeclarationFile && access.&(asm.Opcodes.ACC_SYNTHETIC) != 0 ) =>
 
                   case "<clinit>" =>
 
-                  case m if (access.&(ow.Opcodes.ACC_PROTECTED | ow.Opcodes.ACC_PUBLIC) == 0 ) =>
+                  case m if (isForTypeDeclarationFile && access.&(asm.Opcodes.ACC_PROTECTED | asm.Opcodes.ACC_PUBLIC) == 0 ) =>
+
+                  case m if (isForTypeDeclarationFile && access.&(asm.Opcodes.ACC_BRIDGE) != 0 ) =>
 
                   case "<init>" =>
-                     cv
-                     .visitMethod(access | ow.Opcodes.ACC_STATIC | ow.Opcodes.ACC_NATIVE, "$asyncNew", (
+                     cv.nn
+                     .visitMethod(access | asm.Opcodes.ACC_STATIC | asm.Opcodes.ACC_NATIVE, "$asyncNew", (
                         asyncifiedNd
-                     ), asyncifiedSignature, Array.empty )
+                     ), asyncifiedSignature, Array.empty ).nn
                      .visitEnd()
-
-                  case m if (access.&(ow.Opcodes.ACC_BRIDGE) != 0 ) =>
 
                   case "clone" | "equals" | "toString" | "hashCode" =>
 
-                  case "close" | "dispose" | "finalize" =>
+                  case "close" | "dispose" | "finalize" if isForTypeDeclarationFile =>
 
                   case _ =>
-                     cv
-                     .visitMethod(access | ow.Opcodes.ACC_NATIVE, name + {
+                     import language.unsafeNulls
+                     cv.nn
+                     .visitMethod(access | asm.Opcodes.ACC_NATIVE, name + {
                         name match
                            case s if (s.length() < 5 ) =>
                               "Async"
@@ -252,7 +141,7 @@ extension (dest: org.objectweb.asm.ClassVisitor) {
                         
                      }, (
                         asyncifiedNd
-                     ), asyncifiedSignature, Array.empty )
+                     ), asyncifiedSignature, Array.empty ).nn
                      .visitEnd()
                            
                }

@@ -65,7 +65,7 @@ type WSourceLevelSig
    >: cbsq.meta.asm.jvm.MethodDescriptorImpl1
    <: cbsq.meta.asm.jvm.MethodDescriptorImpl1
 
-export cbsq.meta.asm.{PwEmitter as WsnPwEmitter }
+export cbsq.meta.util.{PwEmitter as WsnPwEmitter }
 
 
 
