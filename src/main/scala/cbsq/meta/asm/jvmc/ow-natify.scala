@@ -44,7 +44,7 @@ extension (dest: org.objectweb.asm.ClassVisitor) {
          override
          def visitMethod(access: Int, name: String | Null, descriptor: String | Null, signature: String | Null, exceptions: Array[String | Null] | Null): asm.MethodVisitor | Null = {
             val visitor0 = (
-               super.visitMethod((
+               super.visitMethod(({
                   (access & ~(Opcodes.ACC_ABSTRACT | Opcodes.ACC_NATIVE) )
                   .`|`({
                      import Natification.Amd
@@ -56,8 +56,31 @@ extension (dest: org.objectweb.asm.ClassVisitor) {
                            else Opcodes.ACC_NATIVE
                      
                   })
-               ), name, descriptor, signature, exceptions).nn
+               }), name, descriptor, signature, exceptions).nn
             )
+            /**
+             * 
+             * a new MethodVisitor which only propagates calls which are not `visitCode`-specific
+             * (still calls `visitEnd`, tho)
+             * 
+             */
+            newOwNtAbstractifyingVisitor(visitor0)
+         }
+      }
+   }
+   
+}
+
+
+
+/**
+ * 
+ * the new MethodVisitor only propagates calls which are not `visitCode`-specific .
+ * (still calls `visitEnd` as it's not `visitCode`-specific)
+ * 
+ */
+def newOwNtAbstractifyingVisitor(visitor0: org.objectweb.asm.MethodVisitor): org.objectweb.asm.MethodVisitor = {
+            import org.objectweb.asm
             new asm.MethodVisitor(asm.Opcodes.ASM9) {
 
                import asm.*
@@ -85,9 +108,11 @@ extension (dest: org.objectweb.asm.ClassVisitor) {
                   visitor0 visitParameterAnnotation(parameter, descriptor, visible)
                }
 
+               /* no-op, as stated */
                override
                def visitCode(): Unit = {}
 
+               /* essential */
                override
                def visitEnd(): Unit = {
                   import language.unsafeNulls
@@ -95,8 +120,14 @@ extension (dest: org.objectweb.asm.ClassVisitor) {
                }
                
             }
-         }
-      }
-   }
-   
 }
+
+
+
+
+
+
+
+
+
+

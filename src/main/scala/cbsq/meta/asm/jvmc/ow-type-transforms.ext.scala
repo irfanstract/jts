@@ -15,6 +15,8 @@ package cbsq.meta.asm.jvmc
 
 
 object jPairsOwClassTags {
+
+   import language.unsafeNulls
    
    val ofTuples = (
       /* a fictituous type `java/lang/Tuple` being variadic */
@@ -26,6 +28,8 @@ object jPairsOwClassTags {
 
 
 object jFuturesOwClassTags {
+
+   import language.unsafeNulls
 
    val ofFutures = (
       // ow.Type.getObjectType("java/util/concurrent/Future")

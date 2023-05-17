@@ -291,7 +291,7 @@ def wsnImpl() = {
 
 export cbsq.meta.asm.jvmc.withJsSpecificMethods 
 
-export cbsq.meta.asm.jvmc.asMakingAsyncMonadifiedVariants
+export cbsq.meta.asm.jvmc.asMakingAsyncifiedVariants
 export cbsq.meta.asm.jvmc.asMakingTupledVariants
 
 trait Sgde
@@ -324,8 +324,8 @@ def fcvDemo101(): Unit = {
          .asPrintWriter()
       ) )
       .withJsSpecificMethods()
-      // .asMakingAsyncMonadifiedVariants()
-      .asMakingTupledVariants()
+      .asMakingAsyncifiedVariants()
+      // .asMakingTupledVariants()
    ) , org.objectweb.asm.ClassReader.SKIP_FRAMES )
 }
 

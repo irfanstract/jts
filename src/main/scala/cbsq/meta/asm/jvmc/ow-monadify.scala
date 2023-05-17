@@ -77,8 +77,11 @@ class computeMonadifiedSigImpl1(
 
 
 
-export amevMonadificativeImpl.asMakingAsyncMonadifiedVariants
+export amevMonadificativeImpl.asMakingAsyncifiedVariants
+export amevMonadificativeImpl.wasGeneratedByAsyncify
+
 export amevMonadificativeImpl.asMakingTupledVariants
+
 export amevMonadificativeImpl.TsConfig
 
 protected /* can't 'private' due to 'implicit' */
@@ -118,16 +121,36 @@ extension (dest: org.objectweb.asm.ClassVisitor) {
 
    /**
     * 
-    * this `ClassVisitor`
-    * adds, for each method, an "async" variant of it (eg returning `Future` or `CompletionStage`)
     * 
+    * this `ClassVisitor`
+    * adds, for each method, an "async" variant of it (eg returning `Future` or `CompletionStage`) .
     * important since
     * the W3C's threading-model *require explicit async-and-await syntax*
+    * 
+    * ```
+    * async function main() {
+    *   const localesScript = await fetch("./localedata.mjs") ;
+    *   ...
+    *   const localeBundle = await loadLocaleBundle(...) ;
+    *   ...
+    * }
+    * ```
     *
+    * not all methods deserve one
+    * (eg *synthetic methods*, `&lt;clinit>`, *package-private* ones, `equals`, `hashCode`, `finalize`), and
+    * different methods may need differentiated mangling-scheme
+    * (eg `&lt;init>`, `of`, `from` )
+    * 
+    * ```
+    * `&lt;clinit>`, `registerNatives`, *synthetic-methods*, `readObject`, `writeObject`, `finalize`
+    * are not intended to be called externally
+    * ```
+    * 
+    * 
     */
-   def asMakingAsyncMonadifiedVariants()(using tsConfig0: TsConfig ) : org.objectweb.asm.ClassVisitor = {
-      val c1 = getAmdtConfigImpl(tsConfig0)
-      // import c1.*
+   def asMakingAsyncifiedVariants()(using tsConfig: TsConfig ) : org.objectweb.asm.ClassVisitor = {
+      import tsConfig.isForTypeDeclarationFile
+      val canShortenTheAsyncKeywForShortNames: Boolean = false
       new asm.ClassVisitor(asm.Opcodes.ASM9, dest) {
 
 
@@ -148,29 +171,48 @@ extension (dest: org.objectweb.asm.ClassVisitor) {
             super.visit(version, access, name, signature, superName, interfaces)
          }
 
+         /**
+          * 
+          * 
+          * not all methods deserve one
+          * (eg *synthetic methods*, `&lt;clinit>`, *package-private* ones, `equals`, `hashCode`, `finalize`), and
+          * different methods may need differentiated mangling-scheme
+          * (eg `&lt;init>`, `of`, `from` )
+          * 
+          * ```
+          * `&lt;clinit>`, `registerNatives`, *synthetic-methods*, `readObject`, `writeObject`, `finalize`
+          * are not intended to be called externally
+          * ```
+          * 
+          * refusing to directly do the *asyncification* here ; instead
+          * leave the responsibility,
+          * of checking for presence of the `asynchronously` variant and accordingly draw-in the keyw `async`,
+          * to the later pass
+          * 
+          * ```
+          * # SOURCE - JVM
+          * search(...args ) { ... } ;
+          * searchAsynchronously(...args ) [native code] ; // will be specially-handled
+          * 
+          * # COMPILED - JS/ES
+          * // search(...args ) ;
+          * searchAsynchronously async (...args) { ... } ;
+          * 
+          * ```
+          * 
+          */
          override
-         def visitMethod(access: Int, name: String | Null, descriptor: String | Null, givenSignature: String | Null, exceptions: Array[String | Null] | Null): asm.MethodVisitor | Null = {
+         def visitMethod(access: Int, name: String, descriptor: String, givenSignature: String | Null, exceptions: Array[String | Null] | Null): asm.MethodVisitor | Null = {
             //
-            try {
+            val originalSigVisitor = ({
                cv.nn
                .visitMethod(access, name, {
                   descriptor
                }, {
                   givenSignature
-               }, exceptions)
-            } finally {
-               dest.nn
-               .visitMethodAsyncMonadified(using c1)(access = access , name = name , descriptor = descriptor , givenSignature = givenSignature , exceptions = exceptions )
-            }
-         }
-         
-      }
-   }
-
-   def visitMethodAsyncMonadified(using  c1: getAmdtConfigImpl )(access: Int, name: String | Null, descriptor: String | Null, givenSignature: String | Null, exceptions: Array[String | Null] | Null) = {
-      val cv = dest
-      import c1.*
-      ({
+               }, exceptions).nn
+            })
+            locally[asm.MethodVisitor] {
                val csg = (
                   computeMonadifiedSigImpl1(
                      
@@ -188,10 +230,14 @@ extension (dest: org.objectweb.asm.ClassVisitor) {
                import csg.monadifiedNd
                /**
                 * 
+                * as mentioned above
+                * 
                 * not all methods deserve one
                 * (eg *synthetic methods*, `&lt;clinit>`, *package-private* ones, `equals`, `hashCode`, `finalize`), and
                 * different methods may need differentiated mangling-scheme
-                * (eg `&lt;init>`, `of`, `from` )
+                * 
+                * refusing to directly do the *asyncification* here ;
+                * leave the relevant responsibility(s) to the later pass
                 * 
                 */
                if ((
@@ -204,49 +250,108 @@ extension (dest: org.objectweb.asm.ClassVisitor) {
                   } == false )
 
                )) {
-               name match {
+                  /**
+                   * 
+                   */
+                  name match {
 
-                  case "<clinit>" =>
+                     case "<clinit>" =>
 
-                  case "<init>" =>
-                     cv.nn
-                     .visitMethod(access | asm.Opcodes.ACC_STATIC | asm.Opcodes.ACC_NATIVE, "$asyncNew", (
-                        monadifiedNd
-                     ), monadifiedSignature, Array.empty ).nn
-                     .visitEnd()
+                     case "<init>" =>
+                        val newMethodVisitor = {
+                           cv.nn
+                           .visitMethod(access | asm.Opcodes.ACC_STATIC | asm.Opcodes.ACC_NATIVE, "$asyncNew", (
+                              monadifiedNd
+                           ), monadifiedSignature, Array.empty ).nn
+                        }
+                        newMethodVisitor.markAsGeneratedByAsyncify(originalName = name )
+                        ({
+                        newMethodVisitor.visitEnd()
+                        })
 
-                  case "finalize" if isForTypeDeclarationFile =>
+                     case "finalize" if isForTypeDeclarationFile => 
 
-                  case "close" | "dispose" =>
-                     
-                  case "clone" | "equals" | "toString" | "hashCode" =>
-
-                  case _ =>
-                     import language.unsafeNulls
-                     cv.nn
-                     .visitMethod(access | asm.Opcodes.ACC_NATIVE, name + {
-                        name match
-                           case s if (s.matches("from") || (canShortenTheAsyncKeywForShortNames && !s.matches("do|update|[gs]et|compute|search|find|match|filter|drop") && (s.length() < 5 ) ) ) =>
-                              "Async"
-                           case _ =>
-                              "Asynchronously"
+                     case "close" | "dispose" => 
                         
-                     }, (
-                        monadifiedNd
-                     ), monadifiedSignature, Array.empty ).nn
-                     .visitEnd()
-                           
+                     case "clone" | "equals" | "toString" | "hashCode" =>
+
+                     case _ =>
+                        import language.unsafeNulls
+                        val newMethodVisitor = {
+                           cv.nn
+                           .visitMethod(access | asm.Opcodes.ACC_NATIVE, name + {
+                              name match
+                                 case s if (s.matches("from") || (canShortenTheAsyncKeywForShortNames && !s.matches("do|update|[gs]et|compute|search|find|match|filter|drop") && (s.length() < 5 ) ) ) =>
+                                    "Async"
+                                 case _ =>
+                                    "Asynchronously"
+                              
+                           }, (
+                              monadifiedNd
+                           ), monadifiedSignature, Array.empty ).nn
+                        }
+                        newMethodVisitor.markAsGeneratedByAsyncify(originalName = name )
+                        ({
+                        newMethodVisitor.visitEnd()
+                        })
+                              
+                  }
                }
-               }
-               ()
-      })
+               originalSigVisitor
+            }
+         }
+         
+      }
    }
 
+   // def visitMethodTupled(tsConfig: TsConfig, )(access: Int, name: String | Null, descriptor: String | Null, givenSignature: String | Null, exceptions: Array[String | Null] | Null) = {
+   //    ???
+   // }
+   
 }
 
-class getAmdtConfigImpl(val tsConfig: TsConfig) {
-   export tsConfig.isForTypeDeclarationFile
-   val canShortenTheAsyncKeywForShortNames: Boolean = false
+val asyncifiedVariantMarkingAnnClass = ({
+   import language.unsafeNulls
+   import org.objectweb.asm
+   asm.Type.getObjectType("jdk/internal/misc/OwMonadify$AsyncifiedVariant")
+})
+
+extension (newMethodVisitor: org.objectweb.asm.MethodVisitor) {
+
+   def markAsGeneratedByAsyncify(originalName: String) : Unit = {
+      // import language.unsafeNulls
+      import org.objectweb.asm
+      // TODO
+      ({
+         newMethodVisitor.visitAnnotation({
+            asyncifiedVariantMarkingAnnClass
+            .getInternalName().nn
+         } , true )
+      }) match {
+
+         case a: (AnyRef & asm.AnnotationVisitor ) =>
+            import language.unsafeNulls
+            ({
+               a.visit("originalName", originalName)
+               a.visitEnd()
+            })
+
+         case _ =>
+            
+      }
+   }
+}
+
+extension (dest: org.objectweb.asm.tree.MethodNode) {
+
+   def wasGeneratedByAsyncify : Boolean = {
+      import language.unsafeNulls
+      import scala.jdk.CollectionConverters.*
+      (dest.visibleAnnotations.asScala ++ dest.invisibleAnnotations.asScala )
+      .map[String](a => a.desc )
+      .contains[String](asyncifiedVariantMarkingAnnClass.getInternalName() )
+   }
+
 }
 
 extension (dest: org.objectweb.asm.ClassVisitor) {
@@ -260,18 +365,6 @@ extension (dest: org.objectweb.asm.ClassVisitor) {
             try {
                dest.visitMethod(access, name, descriptor, givenSignature, exceptions)
             } finally {
-               dest.visitMethodTupled(access = access , name = name , descriptor = descriptor , givenSignature = givenSignature , exceptions = exceptions )
-            }
-         }
-
-      }
-   }
-
-   // transparent 
-   // inline
-   def visitMethodTupled(using tsConfig: TsConfig )(access: Int, name: String | Null, descriptor: String | Null, givenSignature: String | Null, exceptions: Array[String | Null] | Null) = {
-      import tsConfig.isForTypeDeclarationFile
-      ({
                val signature = {
                   import language.unsafeNulls
                   Option(givenSignature)
@@ -282,7 +375,7 @@ extension (dest: org.objectweb.asm.ClassVisitor) {
                   .getParameterTypes()
                }
                val newSig = {
-                  Esig.implementingGenericTypeSpc({ import language.unsafeNulls ; asm.Type.getObjectType("java/lang/Tuple") }, (
+                  Esig.implementingGenericTypeSpc({ import language.unsafeNulls ; jPairsOwClassTags.ofTuples }, (
                      sps
                      .map(s => ('=', s) )
                   ))
@@ -292,7 +385,10 @@ extension (dest: org.objectweb.asm.ClassVisitor) {
                val exn = name.nn
                dest.visitMethod(access, name.nn ++ "$tupled", Esig(newSig).asErased().value, Esig(newSig).value, exceptions).nn
                .visitEnd()
-      })
+            }
+         }
+
+      }
    }
 
 }
