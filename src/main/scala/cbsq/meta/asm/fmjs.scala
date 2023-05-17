@@ -278,8 +278,24 @@ def wsnImpl() = {
             o.println(s"   * ")
             o.println(s"   */ ")
             o.println(s"  /* the return-type varies depending on actual 'args' */ ")
-            o println (dsc1.replaceFirst("\\A\\s*", "  ") )
-            if (code != null) {
+            o println (({
+               import scala.language.unsafeNulls
+               dsc1
+               .replaceFirst("\\A\\s*", "  ")
+               .replaceFirst(";\\s*\\z", "")
+            }) )
+            if ({
+               import scala.language.unsafeNulls
+               import org.objectweb.asm
+               import asm.Opcodes
+               (
+                  code != null
+                  && ((
+                     // (code.access & (Opcodes.ACC_NATIVE | Opcodes.ACC_ABSTRACT)) == 0 
+                     0 < (code.nn : asm.tree.MethodNode).instructions.size()
+                  ))
+               )
+            }) {
                import scala.language.unsafeNulls
                import scala.jdk.CollectionConverters.*
                import org.objectweb.asm
@@ -305,6 +321,10 @@ def wsnImpl() = {
                   o.println(s"    ${instrS} ;" )
                }
                o println "  }"
+            }
+            else {
+               import scala.language.unsafeNulls
+               o println "  ;"
             }
             o.println()
          }
