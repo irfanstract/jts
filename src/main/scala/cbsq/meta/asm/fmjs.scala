@@ -259,7 +259,8 @@ def wsnImpl() = {
                      acc.&(Opcodes.ACC_SYNTHETIC) ,
                      acc.&(Opcodes.ACC_STATIC) ,
                      "public protected package-private".indexOf(e.visibility ) & ~Int.MinValue ,
-                     "\\$(?!a?sync(?:hronous|)|\\d+\\z)".r.findFirstIn(nm).nonEmpty ,
+                     "\\$(?!a?sync(?:hronous|)|tupled?|\\d+\\z)".r.findFirstIn(nm).nonEmpty ,
+                     // "\\$(?!tupled)".r.findFirstIn(nm).nonEmpty ,
                      nm ,
                   )
             }))
@@ -291,6 +292,7 @@ def wsnImpl() = {
 export cbsq.meta.asm.jvmc.withJsSpecificMethods 
 
 export cbsq.meta.asm.jvmc.asMakingAsyncMonadifiedVariants
+export cbsq.meta.asm.jvmc.asMakingTupledVariants
 
 trait Sgde
 {
@@ -322,7 +324,8 @@ def fcvDemo101(): Unit = {
          .asPrintWriter()
       ) )
       .withJsSpecificMethods()
-      .asMakingAsyncMonadifiedVariants()
+      // .asMakingAsyncMonadifiedVariants()
+      .asMakingTupledVariants()
    ) , org.objectweb.asm.ClassReader.SKIP_FRAMES )
 }
 

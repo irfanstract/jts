@@ -6,6 +6,7 @@ package cbsq.meta.asm.jvmc
 
 
 
+// import language.experimental.pureFunctions
 
 
 
@@ -13,6 +14,105 @@ package cbsq.meta.asm.jvmc
 
 
 
+
+case
+class computeMonadifiedSigImpl1(
+   descriptor: String,
+   givenSignature: String | Null ,
+   xMonadifyImpl: Esig => Esig ,
+)
+{
+               //
+   
+               extension (signature: Esig) {
+
+                  protected
+                  // transparent inline
+                  def asXMonadified : Esig = {
+                     xMonadifyImpl(signature)
+                  }
+
+               }
+               
+               val signature = ({
+                  // Some(givenSignature).collect({ case e : String => e })
+                  // .orElse[String](Some(descriptor) )
+                  // .getOrElse(throw IllegalArgumentException("both null"))
+                  ({
+                     import language.unsafeNulls
+                     Option(givenSignature)
+                     .getOrElse(descriptor)
+                  })
+               })
+               
+               /**
+                * 
+                * *the descriptor* and *the signature* needs to be consistent ;
+                * the *compute the signature* needs to happen first, and then
+                * do *compute the erasure of the obtained signt*
+                * 
+                * here's *the signature*
+                * 
+                */
+               val monadifiedSignature = ({
+                  ({
+                     Esig(signature)
+                     .asXMonadified
+                     .value
+                  })
+               })
+
+               /**
+                * 
+                * here's *the type-erased signature*
+                * 
+                */
+               val monadifiedNd = {
+                  Esig(monadifiedSignature)
+                  .asErased()
+                  .value
+               }
+   
+}
+
+
+
+export amevMonadificativeImpl.asMakingAsyncMonadifiedVariants
+export amevMonadificativeImpl.asMakingTupledVariants
+export amevMonadificativeImpl.TsConfig
+
+protected /* can't 'private' due to 'implicit' */
+object amevMonadificativeImpl {
+//
+
+import org.objectweb.asm
+import cbsq.meta.asm.jvm.Esig
+
+def shallBeConsideredPrivate(access: Int): Boolean = {
+   (
+                        true
+                        && (access.&(asm.Opcodes.ACC_SYNTHETIC) != 0 )
+                        && (access.&(asm.Opcodes.ACC_PROTECTED | asm.Opcodes.ACC_PUBLIC) == 0 )
+                        && (access.&(asm.Opcodes.ACC_BRIDGE) != 0 )
+                     )
+}
+
+trait TsConfig {
+   
+   /**
+    * 
+    * whether the output would-be `.d.ts` file,
+    * rather than regular `.ts` or `.js`
+    * 
+    */
+   val isForTypeDeclarationFile : Boolean
+
+}
+object TsConfig {
+   given TsConfig with {
+      final val isForTypeDeclarationFile = true
+   }
+}
 
 extension (dest: org.objectweb.asm.ClassVisitor) {
 
@@ -25,16 +125,9 @@ extension (dest: org.objectweb.asm.ClassVisitor) {
     * the W3C's threading-model *require explicit async-and-await syntax*
     *
     */
-   def asMakingAsyncMonadifiedVariants() : org.objectweb.asm.ClassVisitor = {
-      import org.objectweb.asm
-      import cbsq.meta.asm.jvm.*
-      /**
-       * 
-       * whether the output would-be `.d.ts` file,
-       * rather than regular `.ts` or `.js`
-       * 
-       */
-      val isForTypeDeclarationFile : Boolean = true
+   def asMakingAsyncMonadifiedVariants()(using tsConfig0: TsConfig ) : org.objectweb.asm.ClassVisitor = {
+      val c1 = getAmdtConfigImpl(tsConfig0)
+      // import c1.*
       new asm.ClassVisitor(asm.Opcodes.ASM9, dest) {
 
 
@@ -66,37 +159,33 @@ extension (dest: org.objectweb.asm.ClassVisitor) {
                   givenSignature
                }, exceptions)
             } finally {
-               val signature = (
-                  Some(givenSignature).collect({ case e : String => e })
-                  .orElse[String](Some(descriptor.nn) )
-                  .getOrElse(throw IllegalArgumentException("both null"))
+               dest.nn
+               .visitMethodAsyncMonadified(using c1)(access = access , name = name , descriptor = descriptor , givenSignature = givenSignature , exceptions = exceptions )
+            }
+         }
+         
+      }
+   }
+
+   def visitMethodAsyncMonadified(using  c1: getAmdtConfigImpl )(access: Int, name: String | Null, descriptor: String | Null, givenSignature: String | Null, exceptions: Array[String | Null] | Null) = {
+      val cv = dest
+      import c1.*
+      ({
+               val csg = (
+                  computeMonadifiedSigImpl1(
+                     
+                     descriptor = descriptor.nn , 
+                     givenSignature = givenSignature ,
+
+                     xMonadifyImpl = (s: Esig) => {
+                        s.asReturnValueFutureMonadified
+                     } ,
+
+                  )
                )
-               /**
-                * 
-                * *the descriptor* and *the signature* needs to be consistent ;
-                * the *compute the signature* needs to happen first, and then
-                * do *compute the erasure of the obtained signt*
-                * 
-                * here's *the signature*
-                * 
-                */
-               val asyncifiedSignature = ({
-                  ({
-                     Esig(signature)
-                     .asReturnValueFutureMonadified
-                     .value
-                  })
-               })
-               /**
-                * 
-                * here's *the type-erased signature*
-                * 
-                */
-               val asyncifiedNd = {
-                  Esig(asyncifiedSignature)
-                  .asErased()
-                  .value
-               }
+               import csg.signature
+               import csg.monadifiedSignature
+               import csg.monadifiedNd
                /**
                 * 
                 * not all methods deserve one
@@ -105,53 +194,113 @@ extension (dest: org.objectweb.asm.ClassVisitor) {
                 * (eg `&lt;init>`, `of`, `from` )
                 * 
                 */
+               if ((
+                  true
+
+                  && ({
+                     isForTypeDeclarationFile && (
+                        shallBeConsideredPrivate(access = access )
+                     )
+                  } == false )
+
+               )) {
                name match {
 
-                  /**
-                   * 
-                   */
-                  case m if (isForTypeDeclarationFile && access.&(asm.Opcodes.ACC_SYNTHETIC) != 0 ) =>
-
                   case "<clinit>" =>
-
-                  case m if (isForTypeDeclarationFile && access.&(asm.Opcodes.ACC_PROTECTED | asm.Opcodes.ACC_PUBLIC) == 0 ) =>
-
-                  case m if (isForTypeDeclarationFile && access.&(asm.Opcodes.ACC_BRIDGE) != 0 ) =>
 
                   case "<init>" =>
                      cv.nn
                      .visitMethod(access | asm.Opcodes.ACC_STATIC | asm.Opcodes.ACC_NATIVE, "$asyncNew", (
-                        asyncifiedNd
-                     ), asyncifiedSignature, Array.empty ).nn
+                        monadifiedNd
+                     ), monadifiedSignature, Array.empty ).nn
                      .visitEnd()
 
-                  case "clone" | "equals" | "toString" | "hashCode" =>
+                  case "finalize" if isForTypeDeclarationFile =>
 
-                  case "close" | "dispose" | "finalize" if isForTypeDeclarationFile =>
+                  case "close" | "dispose" =>
+                     
+                  case "clone" | "equals" | "toString" | "hashCode" =>
 
                   case _ =>
                      import language.unsafeNulls
                      cv.nn
                      .visitMethod(access | asm.Opcodes.ACC_NATIVE, name + {
                         name match
-                           case s if (s.length() < 5 ) =>
+                           case s if (s.matches("from") || (canShortenTheAsyncKeywForShortNames && !s.matches("do|update|[gs]et|compute|search|find|match|filter|drop") && (s.length() < 5 ) ) ) =>
                               "Async"
                            case _ =>
                               "Asynchronously"
                         
                      }, (
-                        asyncifiedNd
-                     ), asyncifiedSignature, Array.empty ).nn
+                        monadifiedNd
+                     ), monadifiedSignature, Array.empty ).nn
                      .visitEnd()
                            
                }
-            }
-         }
-         
-      }
+               }
+               ()
+      })
    }
 
 }
+
+class getAmdtConfigImpl(val tsConfig: TsConfig) {
+   export tsConfig.isForTypeDeclarationFile
+   val canShortenTheAsyncKeywForShortNames: Boolean = false
+}
+
+extension (dest: org.objectweb.asm.ClassVisitor) {
+   
+   def asMakingTupledVariants()(using tsConfig: TsConfig ) : org.objectweb.asm.ClassVisitor = {
+      import tsConfig.isForTypeDeclarationFile
+      new asm.ClassVisitor(asm.Opcodes.ASM9, dest) {
+
+         override
+         def visitMethod(access: Int, name: String | Null, descriptor: String | Null, givenSignature: String | Null, exceptions: Array[String | Null] | Null): asm.MethodVisitor | Null = {
+            try {
+               dest.visitMethod(access, name, descriptor, givenSignature, exceptions)
+            } finally {
+               dest.visitMethodTupled(access = access , name = name , descriptor = descriptor , givenSignature = givenSignature , exceptions = exceptions )
+            }
+         }
+
+      }
+   }
+
+   // transparent 
+   // inline
+   def visitMethodTupled(using tsConfig: TsConfig )(access: Int, name: String | Null, descriptor: String | Null, givenSignature: String | Null, exceptions: Array[String | Null] | Null) = {
+      import tsConfig.isForTypeDeclarationFile
+      ({
+               val signature = {
+                  import language.unsafeNulls
+                  Option(givenSignature)
+                  .getOrElse(descriptor)
+               }
+               val sps = {
+                  Esig(signature)
+                  .getParameterTypes()
+               }
+               val newSig = {
+                  Esig.implementingGenericTypeSpc({ import language.unsafeNulls ; asm.Type.getObjectType("java/lang/Tuple") }, (
+                     sps
+                     .map(s => ('=', s) )
+                  ))
+                  .value
+                  .++:("(").:++(")").:++(Esig(signature).getReturnType().value )
+               }
+               val exn = name.nn
+               dest.visitMethod(access, name.nn ++ "$tupled", Esig(newSig).asErased().value, Esig(newSig).value, exceptions).nn
+               .visitEnd()
+      })
+   }
+
+}
+
+//
+
+}
+
 
 
 

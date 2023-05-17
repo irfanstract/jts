@@ -22,12 +22,17 @@ extension [A <: org.objectweb.asm.signature.SignatureVisitor](scv: A) {
 
    // inline
    def visitXSigReturnType(sig: String) = {
-            new org.objectweb.asm.signature.SignatureVisitor (ow.Opcodes.ASM9) {
-               override
-               def visitReturnType() = {
-                  scv
-               }
-            }
+            require(0 < sig.length(), s"[visitXSigReturnType] unsupported empty sig")
+            ({
+               if sig startsWith "(" then
+                  new org.objectweb.asm.signature.SignatureVisitor (ow.Opcodes.ASM9) {
+                     override
+                     def visitReturnType() = {
+                        scv
+                     }
+                  }
+               else scv
+            } : org.objectweb.asm.signature.SignatureVisitor)
             .visitXSig(sig)
    }
 
@@ -40,12 +45,21 @@ extension [A <: org.objectweb.asm.signature.SignatureVisitor](scv: A) {
  * 
  */
 sealed
-case class Esig(value: String) {
+case class Esig(val value: String) {
 
    value.nn
+   require(0 < value.length(), "[Esig()] unsupported empty string")
 
    override
-   def toString(): String = s"type $value"
+   def toString(): String = {
+      val METHOD = "\\A\\(".r.unanchored
+      value match
+         case METHOD(_) =>
+            s"l $value"
+         case _ =>
+            s"type $value"
+      
+   }
 
 }
 
@@ -53,6 +67,11 @@ object Esig {
 
 extension (sig0 : Esig) {
 
+   /**
+    * 
+    * after *type-erasure*
+    * 
+    */
    def asErased(): Esig = {
             val rscv = (
                new org.objectweb.asm.signature.SignatureWriter() {
@@ -88,6 +107,11 @@ extension (sig0 : Esig) {
       esigAnalyseImpl(sig0)
    }
 
+   /**
+    * 
+    * equivalent-instance with the return-type (re)set to `void`
+    * 
+    */
    def getParameterSig() = {
       
             val Esig(sig) = sig0
@@ -169,6 +193,22 @@ extension (sig0 : Esig) {
             
    }
 
+}
+
+def implementingGenericTypeSpc(c: org.objectweb.asm.Type, p: IndexedSeq[(Char, Esig)] ): Esig = {
+   import language.unsafeNulls
+   import org.objectweb.asm
+   val cv = new asm.signature.SignatureWriter()
+   cv.visitClassType(c.getInternalName() )
+   for ((variance, e) <- p) {
+      val subVisitor = (
+         (cv : asm.signature.SignatureVisitor).visitTypeArgument(variance)
+      )
+      subVisitor visitXSig e.value
+      // subVisitor.visitEnd()
+   }
+   cv.visitEnd()
+   Esig(cv.toString() )
 }
 
 }
