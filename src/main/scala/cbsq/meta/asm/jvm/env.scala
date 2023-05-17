@@ -8,21 +8,59 @@ package cbsq.meta.asm.jvm
 
 
 
-export cbsq.meta.asm.ow
+/**
+ * 
+ * a subset of `org.objectweb.asm` ;
+ * would-have-been *all of them* but turns-out failing ("Implementation Restriction"),
+ * hence limited to a subset
+ * 
+ */
+@deprecated("not a complete re-export ; consider directly importing 'org.objectweb.asm'")
+object ow {
+   
+   import org.objectweb.asm
+
+   // export asm.{* }
+   
+   object Opcodes {
+      export asm.Opcodes.*
+   }
+   
+   export asm.ModuleVisitor
+   export asm.ClassVisitor
+   export asm.ClassReader
+   export asm.ClassWriter
+   export asm.AnnotationVisitor
+   export asm.MethodVisitor
+   
+   export asm.Attribute
+   export asm.ConstantDynamic
+   type Handle = asm.Handle
+   object Handle {
+      export asm.Handle.*
+   }
+   type Type = asm.Type
+   object Type {
+      export asm.Type.*
+   }
+
+}
 
 extension [A <: org.objectweb.asm.signature.SignatureVisitor](scv: A) {
 
    inline
    def visitXSig(a: String) = {
-            new org.objectweb.asm.signature.SignatureReader(a)
+            import org.objectweb.asm
+            new asm.signature.SignatureReader(a)
             .accept({
                scv
-            } : org.objectweb.asm.signature.SignatureVisitor )
+            } : asm.signature.SignatureVisitor )
    }
 
    // inline
    def visitXSigReturnType(sig: String) = {
             require(0 < sig.length(), s"[visitXSigReturnType] unsupported empty sig")
+            import org.objectweb.asm
             /**
              * 
              * the call
@@ -32,14 +70,14 @@ extension [A <: org.objectweb.asm.signature.SignatureVisitor](scv: A) {
              */
             ({
                if sig startsWith "(" then
-                  new org.objectweb.asm.signature.SignatureVisitor (ow.Opcodes.ASM9) {
+                  new asm.signature.SignatureVisitor (asm.Opcodes.ASM9) {
                      override
                      def visitReturnType() = {
                         scv
                      }
                   }
                else scv
-            } : org.objectweb.asm.signature.SignatureVisitor)
+            } : asm.signature.SignatureVisitor)
             .visitXSig(sig)
    }
 

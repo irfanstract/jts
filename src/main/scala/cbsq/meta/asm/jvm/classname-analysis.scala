@@ -38,7 +38,7 @@ trait FullyQualifiedClassNameAnalyser extends
    AnyRef
 {
    
-   extension (name0: ow.Type) {
+   extension (name0: org.objectweb.asm.Type) {
       
          /**
           * 
@@ -52,7 +52,7 @@ trait FullyQualifiedClassNameAnalyser extends
 
    }
 
-   extension (name0: ow.Type) {
+   extension (name0: org.objectweb.asm.Type) {
       
          /**
           * 
