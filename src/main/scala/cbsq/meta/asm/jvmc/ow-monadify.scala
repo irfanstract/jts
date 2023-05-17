@@ -222,7 +222,11 @@ extension (dest: org.objectweb.asm.ClassVisitor) {
                 */
                name match {
 
+                  case m if (access.&(ow.Opcodes.ACC_SYNTHETIC) != 0 ) =>
+
                   case "<clinit>" =>
+
+                  case m if (access.&(ow.Opcodes.ACC_PROTECTED | ow.Opcodes.ACC_PUBLIC) == 0 ) =>
 
                   case "<init>" =>
                      cv
@@ -231,11 +235,22 @@ extension (dest: org.objectweb.asm.ClassVisitor) {
                      ), asyncifiedSignature, Array.empty )
                      .visitEnd()
 
+                  case m if (access.&(ow.Opcodes.ACC_BRIDGE) != 0 ) =>
+
                   case "clone" | "equals" | "toString" | "hashCode" =>
+
+                  case "close" | "dispose" | "finalize" =>
 
                   case _ =>
                      cv
-                     .visitMethod(access | ow.Opcodes.ACC_NATIVE, name + "Asynchronously", (
+                     .visitMethod(access | ow.Opcodes.ACC_NATIVE, name + {
+                        name match
+                           case s if (s.length() < 5 ) =>
+                              "Async"
+                           case _ =>
+                              "Asynchronously"
+                        
+                     }, (
                         asyncifiedNd
                      ), asyncifiedSignature, Array.empty )
                      .visitEnd()
