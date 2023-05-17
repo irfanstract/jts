@@ -466,7 +466,7 @@ def fcvDemo101(): Unit = {
          .asPrintWriter()
       ) )
       .withJsSpecificMethods()
-      // .asMakingAsyncifiedVariants()
+      .asMakingAsyncifiedVariants()
       // .asMakingTupledVariants()
    ) , org.objectweb.asm.ClassReader.SKIP_FRAMES )
 }
