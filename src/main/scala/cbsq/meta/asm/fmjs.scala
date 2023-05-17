@@ -279,6 +279,33 @@ def wsnImpl() = {
             o.println(s"   */ ")
             o.println(s"  /* the return-type varies depending on actual 'args' */ ")
             o println (dsc1.replaceFirst("\\A\\s*", "  ") )
+            if (code != null) {
+               import scala.language.unsafeNulls
+               import scala.jdk.CollectionConverters.*
+               import org.objectweb.asm
+               import cbsq.meta.asm.jvm.opcodeNameTable
+               o println "  {"
+               for (instr <- (code.nn : asm.tree.MethodNode).instructions.asScala) {
+                  val instrS = {
+                     val opcodeName = (
+                        opcodeNameTable.apply(instr.getOpcode())
+                     )
+                     instr match {
+                        case c: asm.tree.InsnNode =>
+                           s"${opcodeName }"
+                        case c: asm.tree.MethodInsnNode =>
+                           s"${opcodeName } ${c.name }${c.desc } "
+                        case c: asm.tree.LdcInsnNode =>
+                           import c.cst
+                           s"ldc ${cst.getClass().getSimpleName() }(${cst })"
+                        case c =>
+                           s"${opcodeName }(...)"
+                     }
+                  }
+                  o.println(s"    ${instrS} ;" )
+               }
+               o println "  }"
+            }
             o.println()
          }
          
@@ -360,7 +387,7 @@ def wsnImpl() = {
                   )
             }).compose[(NativeSigImpl, org.objectweb.asm.MethodVisitor)](_._1))
          )) {
-            o.printXClassMethodDefUnconditionally(dsc10, code = null)
+            o.printXClassMethodDefUnconditionally(dsc10, code = code10B)
          }
          o.println()
          locally {
