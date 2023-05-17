@@ -191,7 +191,7 @@ def wsnImpl() = {
             })
       )
       val hideableMethodsEffectively = (
-            if canDropPrivateMethod then hideworthyMethods
+            if canOmitPrivateMethods then hideworthyMethods
             else Set()
       )
 

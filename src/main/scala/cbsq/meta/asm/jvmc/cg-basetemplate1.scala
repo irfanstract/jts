@@ -17,13 +17,13 @@ package cbsq.meta.asm.jvmc
 
 trait ERpkImplicits extends
    AnyRef
-   with cbsq.meta.asm.jvm.ClassNamesAnalyser
+   with cbsq.meta.asm.jvm.FullyQualifiedClassNameAnalyser
    with cbsq.meta.asm.jvmc.ClassNamesCompiler
 { eRpkImpl =>
 
    // val boxingImplicits : (
    //    AnyRef
-   //    with cbsq.meta.asm.jvm.ClassNamesAnalyser
+   //    with cbsq.meta.asm.jvm.FullyQualifiedClassNameAnalyser
    //    with cbsq.meta.asm.jvmc.ClassNamesCompiler
    // ) = eRpkImpl
 
@@ -31,7 +31,7 @@ trait ERpkImplicits extends
 
 trait ERpk extends
    AnyRef
-   with cbsq.meta.asm.jvm.ClassNamesAnalyser
+   with cbsq.meta.asm.jvm.FullyQualifiedClassNameAnalyser
    with cbsq.meta.asm.jvmc.ClassNamesCompiler
    with ERpkImplicits
 {
@@ -84,7 +84,7 @@ trait ERpk extends
     */
    def rpkName(superName: ow.Type): String
 
-   val canDropPrivateMethod: Boolean
+   val canOmitPrivateMethods: Boolean
    
    /**
     * 
@@ -150,7 +150,7 @@ class wsnImplCtx1() {
          .prependedAll("rootPkg.")
       }
 
-      val canDropPrivateMethod: Boolean = {
+      val canOmitPrivateMethods: Boolean = {
          true
       }
 
@@ -194,7 +194,7 @@ class wsnImplCtx1() {
    }
    /* avoid using wildcard imports as there are other stuffs */ 
    export eRpkImpl.getBaseTemplate
-   export eRpkImpl.canDropPrivateMethod
+   export eRpkImpl.canOmitPrivateMethods
    export eRpkImpl.{getCanonicalName, getSimpleName}
    export eRpkImpl.{compileInlineLevelRef}
 

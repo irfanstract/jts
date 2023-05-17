@@ -13,7 +13,28 @@ package cbsq.meta.asm.jvm
 
 
 
-trait ClassNamesAnalyser extends
+/**
+ * 
+ * provides method to analyse class-names,
+ * preferably as-complete-as `java.lang.Class`
+ * 
+ */
+// sealed
+type ClassNamesAnalyser 
+      <: FullyQualifiedClassNameAnalyser
+
+
+
+/**
+ * 
+ * for *class-names returned by `java.lang.Class.prototype.getName`*,
+ * hence these two methods
+ * 
+ * - `getCanonicalName`
+ * - `getSimpleName`
+ * 
+ */
+trait FullyQualifiedClassNameAnalyser extends
    AnyRef
 {
    

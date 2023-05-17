@@ -264,7 +264,7 @@ extension (dest: org.objectweb.asm.ClassVisitor) {
                               monadifiedNd
                            ), monadifiedSignature, Array.empty ).nn
                         }
-                        newMethodVisitor.markAsGeneratedByAsyncify(originalName = name )
+                        newMethodVisitor.markAsAsyncifyGenerated(originalName = name )
                         ({
                         newMethodVisitor.visitEnd()
                         })
@@ -290,7 +290,7 @@ extension (dest: org.objectweb.asm.ClassVisitor) {
                               monadifiedNd
                            ), monadifiedSignature, Array.empty ).nn
                         }
-                        newMethodVisitor.markAsGeneratedByAsyncify(originalName = name )
+                        newMethodVisitor.markAsAsyncifyGenerated(originalName = name )
                         ({
                         newMethodVisitor.visitEnd()
                         })
@@ -318,7 +318,18 @@ val asyncifiedVariantMarkingAnnClass = ({
 
 extension (newMethodVisitor: org.objectweb.asm.MethodVisitor) {
 
-   def markAsGeneratedByAsyncify(originalName: String) : Unit = {
+   /**
+    * 
+    * mark the resulting method as "asyncify-generated"
+    * 
+    * must not happen after `visitCode` or `visitEnd`,
+    * due to (potential) usage of `visitAnnotation` or `visitAttribute` etc
+    * 
+    * 
+    * @param originalName the original method-name
+    * 
+    */
+   def markAsAsyncifyGenerated(originalName: String) : Unit = {
       // import language.unsafeNulls
       import org.objectweb.asm
       // TODO
@@ -344,6 +355,10 @@ extension (newMethodVisitor: org.objectweb.asm.MethodVisitor) {
 
 extension (dest: org.objectweb.asm.tree.MethodNode) {
 
+   /**
+    * 
+    * 
+    */
    def wasGeneratedByAsyncify : Boolean = {
       import language.unsafeNulls
       import scala.jdk.CollectionConverters.*
@@ -375,11 +390,7 @@ extension (dest: org.objectweb.asm.ClassVisitor) {
                   .getParameterTypes()
                }
                val newSig = {
-                  Esig.implementingGenericTypeSpc({ import language.unsafeNulls ; jPairsOwClassTags.ofTuples }, (
-                     sps
-                     .map(s => ('=', s) )
-                  ))
-                  .value
+                  getTupleType(sps).value
                   .++:("(").:++(")").:++(Esig(signature).getReturnType().value )
                }
                val exn = name.nn

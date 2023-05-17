@@ -18,12 +18,34 @@ object jPairsOwClassTags {
 
    import language.unsafeNulls
    
+   /**
+    * 
+    * a (possibly fictituous) *raw-type* which
+    * *take variable number-of type-args, and all-covariant*
+    * 
+    */
    val ofTuples = (
       /* a fictituous type `java/lang/Tuple` being variadic */
       ow.Type.getObjectType("java/lang/Tuple")
    )
    
 }
+
+/**
+ * 
+ * a (possibly fictituous) *covariant tuple-type*
+ * 
+ */
+def getTupleType(sps : IndexedSeq[Esig]): Esig = {
+   // import language.unsafeNulls
+   ({
+                  Esig.implementingGenericTypeSpc({ import language.unsafeNulls ; jPairsOwClassTags.ofTuples }, (
+                     sps
+                     .map(s => (('=', s) : ('=', s.type)) )
+                  ))
+   })
+}
+
 
 
 

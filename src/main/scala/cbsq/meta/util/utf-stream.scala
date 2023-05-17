@@ -37,18 +37,29 @@ abstract class `Pwe%!` protected ()
 
    /**
     * 
-    * the string repr --
-    * runs `printTo`
+    * runs `printTo` and
+    * return the resulting `String`
     * 
     */
-   override
    inline
-   def toString(): String = {
+   def buildToString(): String = {
       val o = new java.io.StringWriter
       printTo((
          new java.io.PrintWriter(o, true)
       ))
       o.toString()
+   }
+
+   /**
+    * 
+    * the string repr --
+    * runs `buildToString`
+    * 
+    */
+   override
+   inline
+   def toString(): String = {
+      buildToString()
    }
 
 }

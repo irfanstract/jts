@@ -2,11 +2,11 @@
 
 
 
-org.objectweb.asm.Type.getType("()V")
+org.objectweb.asm.Type.getType("()V").nn
 
-cbsq.meta.asm.ow.Type.getType("(IJ)V")
+cbsq.meta.asm.ow.Type.getType("(IJ)V").nn
 
-cbsq.meta.asm.ow.Type.getType("(V)V")
+cbsq.meta.asm.ow.Type.getType("(V)V").nn
 
 util.Try {
    java.lang.invoke.MethodType.fromMethodDescriptorString("(V)V", null)
@@ -17,6 +17,7 @@ util.Try {
 }
 
 util.Try {
+   import language.unsafeNulls
    org.objectweb.asm.Type.getType("(V)V")
    .getArgumentTypes()
 }
@@ -35,8 +36,8 @@ util.Try {
 }
 
 {
-   import  cbsq.meta.asm.jvmc.*
-   trait L1[C[A] <: Eoft[A] ] 
+   // import  cbsq.meta.asm.jvmc.*
+   // trait L1[C[A] <: Eoft[A] ] 
 }
 
 math.random()
@@ -52,6 +53,7 @@ math.random()
    Esig("(Z)[J").withMappedReturnType([E <: OwtBase ] => (e: E) => e.asMonoFutureMonadified )
 }
 {
+   import language.unsafeNulls
    import  cbsq.meta.asm.jvmc.*
    ow.Type.getType("(Z)[J").withMappedReturnType([E <: OwtBase ] => (e: E) => e.asMonoFutureMonadified )
 }

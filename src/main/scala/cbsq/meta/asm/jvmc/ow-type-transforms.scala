@@ -49,7 +49,7 @@ extension [A <: OwtBase](sig0: A) {
    def monoAppliedToGenericType(
       sv: org.objectweb.asm.Type ,
 
-      variance: '+' | '-' | '=' = '+' ,
+      variance: cbsq.meta.asm.jvm.VarianceChar = '+' ,
 
    ): OwtMapped[A] = {
       sig0 match {
