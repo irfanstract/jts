@@ -21,14 +21,15 @@ package cbsq.meta.asm
 export cbsq.meta.asm.jvmc.{ERpkImplicits, ERpk }
 
 def fcv(o: java.io.PrintWriter) : ow.ClassVisitor = {
-   new org.objectweb.asm.ClassVisitor(ow.Opcodes.ASM9) {
+   import org.objectweb.asm
+   new asm.ClassVisitor(asm.Opcodes.ASM9) {
 
       var s : Wsn = (
          wsnImpl( )
       )
       
       override
-      def visitAttribute(attribute: org.objectweb.asm.Attribute): Unit = {
+      def visitAttribute(attribute: asm.Attribute): Unit = {
          println(attribute.toString() )
          println(attribute.`type` )
       }
@@ -36,7 +37,7 @@ def fcv(o: java.io.PrintWriter) : ow.ClassVisitor = {
       override
       def visit(version: Int, access: Int, name: String, signature: String, superName: String, interfaces: Array[String]): Unit = {
          ;
-         import org.objectweb.asm.Type
+         import asm.Type
          s = ({
             import language.unsafeNulls
             s.withNewFullName(
@@ -48,25 +49,39 @@ def fcv(o: java.io.PrintWriter) : ow.ClassVisitor = {
       }
       
       override
-      def visitMethod(access: Int, name: String, descriptor: String, signature: Null | String, exceptions: Array[String]): ow.MethodVisitor = {
-         import org.objectweb.asm.Opcodes
-         s = ((s: Wsn) => (
-            s
-            .withAddedMethodByNativeSig((
+      def visitMethod(access: Int, name: String, descriptor: String, signature: Null | String, exceptions: Array[String]): asm.MethodVisitor = {
+         ;
+         val cmv = (
+            new asm.tree.MethodNode()
+         )
+         def onVisitEnd() : Unit = {
+            s = ((s: Wsn) => (
                s
-               .translateIntoNativeSig(({
-                  import cbsq.meta.asm.jvm.MethodDescriptorImpl1
-                  MethodDescriptorImpl1(
-                     access = access ,
-                     name = name ,
-                     descriptor0 = (
-                        MethodDescriptorImpl1.Bds(descriptor, signature)
-                     ) ,
-                  )
-               }))
-            ))
-         ))(s)
-         new org.objectweb.asm.MethodVisitor(org.objectweb.asm.Opcodes.ASM9 ) {}
+               .withAddedMethodByNativeSig((
+                  s
+                  .translateIntoNativeSig(({
+                     import cbsq.meta.asm.jvm.MethodDescriptorImpl1
+                     MethodDescriptorImpl1(
+                        access = access ,
+                        name = name ,
+                        descriptor0 = (
+                           MethodDescriptorImpl1.Bds(descriptor, signature)
+                        ) ,
+                     )
+                  }))
+               ) , mv => cmv.accept(mv) )
+            ))(s)
+            
+         }
+         new asm.MethodVisitor(asm.Opcodes.ASM9, cmv ) {
+
+            override
+            def visitEnd(): Unit = {
+               super.visitEnd()
+               onVisitEnd()
+            }
+            
+         }
       }
 
       override
@@ -91,11 +106,32 @@ def wsnImpl() = {
    import wsni.*
 
    sealed case class forConfig(
-      name: String ,
-      superName: String ,
-      methodsByTsDescs: Set[? <: NativeSigImpl] ,
+      buildClassDef: (org.objectweb.asm.ClassVisitor) => Unit ,
    ) extends AnyRef with Wsn 
    {
+
+      private [forConfig]
+      class Rendered {
+      //
+      
+      val cRevisited = {
+         import scala.language.unsafeNulls
+         import org.objectweb.asm
+         val cv = new asm.tree.ClassNode(asm.Opcodes.ASM9 )
+         buildClassDef.apply(cv)
+         cv.visitEnd()
+         cv
+      }
+
+      val name = {
+         import scala.language.unsafeNulls
+         cRevisited.name
+      }
+
+      val superName = {
+         import scala.language.unsafeNulls
+         cRevisited.superName
+      }
 
       val simpleName = ({
          import language.unsafeNulls
@@ -109,6 +145,39 @@ def wsnImpl() = {
          .getSimpleName()
       })
 
+      val methodsByTsDescs = {
+         import language.unsafeNulls
+         import scala.jdk.CollectionConverters.*
+         cRevisited.methods.asScala
+         .toIndexedSeq
+         .map(m => (
+            NativeSigImpl(
+               access = m.access ,
+               name = m.name ,
+               descriptor0 = (
+                  NativeSigImpl.Bds(
+                     descriptor = m.desc ,
+                     signature0 = m.signature ,
+                  )
+               ) ,
+            )
+         ))
+         // ???
+      }
+
+      val hideworthyMethods = (
+            methodsByTsDescs
+            .filter(e => {
+               e.isEffectivelyPrivate()
+            })
+      )
+      val hideableMethodsEffectively = (
+            if canOmitPrivateMethods then hideworthyMethods
+            else Set()
+      )
+
+      }
+      
       type Derived >: Wsn <: Wsn
       
       def withNewFullName(
@@ -117,46 +186,27 @@ def wsnImpl() = {
          superInterfaces    : IndexedSeq[ow.Type]
       ): Derived = {
          import language.unsafeNulls
+         // TODO
          copy(
-            name      = (ownName        ).getInternalName() ,
-            superName = (superclassName ).getInternalName() ,
+            buildClassDef = (clv) => {
+               import scala.language.unsafeNulls
+               import org.objectweb.asm
+               if (false) {
+                  buildClassDef(clv)
+               }
+               clv.visit((
+                  // TODO
+                  asm.Opcodes.V11 /* `constantDynamic` */
+               ) , {
+                  // TODO
+                  import asm.Opcodes
+                  Opcodes.ACC_PUBLIC
+               } , ownName.getInternalName(), null, superclassName.getInternalName(), {
+                  superInterfaces
+                  .map(t => t.getInternalName() )
+               }.toArray )
+            } ,
          )
-      }
-      
-      extension (o: java.io.PrintWriter) {
-
-      /**
-       * 
-       * the set of methods defined by JRE's `java.lang.Object` and
-       * that defined by TC39's `Object.prototype` is very close, and
-       * the relevant W3C's standards joined the convergence.
-       * simply add some missing methods from `java.lang.Object`, and
-       * it fits in (...)ly
-       * 
-       * print-out a commented-out code-section defining the minimum-union between them
-       * 
-       */
-      def printXTc39sObjectPrototypeHolyGrailDisabled(): Unit = {
-         o.println(s"//                   ")
-         o.println(s"//   constructor() ; ")
-         o.println(s"//                   ")
-         o.println(s"//   equals<That>(thatOne: That ): boolean ;")
-         o.println(s"//   hashCode(): string ;")
-         o.println(s"//                   ")
-         o.println(s"// //  toJSON(): null | {} ;")
-         o.println(s"// //  clone(): $simpleName ;")
-         o.println(s"//                   ")
-         o.println(s"// //  close(): void ;")
-         o.println(s"// //  [Symbol.asyncDispose](): Promise<void> ;")
-         o.println(s"// //  finalize(): void ;")
-         o.println(s"// //  [Symbol.synchronized]: Thread.SyncronizedBlockSupport ;")
-         o.println(s"//                   ")
-         o.println(s"//   toString(): string ;")
-         o.println(s"//   toLocaleString(): string ;")
-         o.println(s"//   get [Symbol.toStringTag](): string ;")
-         o.println(s"//                   ")
-      }
-
       }
       
       type NativeSig
@@ -169,11 +219,21 @@ def wsnImpl() = {
          sig
       }
 
-      def withAddedMethodByNativeSig(sig: NativeSig): Derived = {
+      override
+      def withAddedMethodByNativeSig(
+         sig: NativeSig,
+         buildMethod: (org.objectweb.asm.MethodVisitor) => Unit ,
+      ): Derived = {
          copy(
-            methodsByTsDescs = (
-               methodsByTsDescs ++ Set(sig)
-            ),
+            buildClassDef = (clv) => {
+               import scala.language.unsafeNulls
+               import org.objectweb.asm
+               buildClassDef(clv)
+               val mv1 = (
+                  clv.visitMethod(sig.access, sig.name, sig.descriptor, sig.signature, null)
+               )
+               buildMethod(mv1)
+            },
          )
       }
 
@@ -183,17 +243,6 @@ def wsnImpl() = {
 
       override
       type WMNs <: Nothing
-
-      val hideworthyMethods = (
-            methodsByTsDescs
-            .filter(e => {
-               e.isEffectivelyPrivate()
-            })
-      )
-      val hideableMethodsEffectively = (
-            if canOmitPrivateMethods then hideworthyMethods
-            else Set()
-      )
 
       extension (o: java.io.PrintWriter) {
 
@@ -230,7 +279,49 @@ def wsnImpl() = {
          
       }
 
-      val distilledFormPwEmitter = (
+      lazy val distilledFormPwEmitter = ({
+      ;
+
+      val cvrev = Rendered()
+
+      import cvrev.*
+
+      extension (o: java.io.PrintWriter) {
+
+      /**
+       * 
+       * the set of methods defined by JRE's `java.lang.Object` and
+       * that defined by TC39's `Object.prototype` is very close, and
+       * the relevant W3C's standards joined the convergence.
+       * simply add some missing methods from `java.lang.Object`, and
+       * it fits in (...)ly
+       * 
+       * print-out a commented-out code-section defining the minimum-union between them
+       * 
+       */
+      def printXTc39sObjectPrototypeHolyGrailDisabled(): Unit = {
+         o.println(s"//                   ")
+         o.println(s"//   constructor() ; ")
+         o.println(s"//                   ")
+         o.println(s"//   equals<That>(thatOne: That ): boolean ;")
+         o.println(s"//   hashCode(): string ;")
+         o.println(s"//                   ")
+         o.println(s"// //  toJSON(): null | {} ;")
+         o.println(s"// //  clone(): $simpleName ;")
+         o.println(s"//                   ")
+         o.println(s"// //  close(): void ;")
+         o.println(s"// //  [Symbol.asyncDispose](): Promise<void> ;")
+         o.println(s"// //  finalize(): void ;")
+         o.println(s"// //  [Symbol.synchronized]: Thread.SyncronizedBlockSupport ;")
+         o.println(s"//                   ")
+         o.println(s"//   toString(): string ;")
+         o.println(s"//   toLocaleString(): string ;")
+         o.println(s"//   get [Symbol.toStringTag](): string ;")
+         o.println(s"//                   ")
+      }
+
+      }
+      
       WsnPwEmitter((o: java.io.PrintWriter) => {
          import language.unsafeNulls
          val baseTemplate = (
@@ -278,14 +369,12 @@ def wsnImpl() = {
          o.println("}")
          o.println(s"export = $simpleName ;")
       })
-      )
+      })
 
    }
    
    forConfig(
-      name = "???" ,
-      superName = "???" ,
-      methodsByTsDescs = Set() ,
+      buildClassDef = (v) => {} ,
    )
 }
 
@@ -317,6 +406,8 @@ def fcvDemo101(): Unit = {
          .openStream().nn
       ))
    )
+   import cbsq.meta.asm.jvmc.amevMonadificativeImpl.defaultTsConfig
+   //
    cr
    .accept((
       fcv((

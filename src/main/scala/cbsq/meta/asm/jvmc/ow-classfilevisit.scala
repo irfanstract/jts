@@ -44,7 +44,10 @@ trait Wsn {
 
    def translateIntoNativeSig(sig: WSourceLevelSig ) : NativeSig
 
-   def withAddedMethodByNativeSig(sig: NativeSig): Derived
+   def withAddedMethodByNativeSig(
+      sig: NativeSig,
+      c: (org.objectweb.asm.MethodVisitor) => Unit ,
+   ): Derived
 
    /**
     * 
@@ -57,7 +60,7 @@ trait Wsn {
     */
    type WMNs
 
-   val distilledFormPwEmitter: WsnPwEmitter
+   lazy val distilledFormPwEmitter: WsnPwEmitter
 
 }
 

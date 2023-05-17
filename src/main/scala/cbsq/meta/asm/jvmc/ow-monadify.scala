@@ -48,10 +48,10 @@ class computeMonadifiedSigImpl1(
                /**
                 * 
                 * *the descriptor* and *the signature* needs to be consistent ;
-                * the *compute the signature* needs to happen first, and then
-                * do *compute the erasure of the obtained signt*
-                * 
-                * here's *the signature*
+                * `givenSignature` could be `null`, in which case
+                * `signature` would be `descriptor`, and yet
+                * `monadifiedSignature` shall be based-on `givenSignature` *when present*,
+                * not `descriptor`
                 * 
                 */
                val monadifiedSignature = ({
@@ -82,9 +82,9 @@ export amevMonadificativeImpl.wasGeneratedByAsyncify
 
 export amevMonadificativeImpl.asMakingTupledVariants
 
-export amevMonadificativeImpl.TsConfig
+export cbsq.meta.asm.jsgen.TsConfig
 
-protected /* can't 'private' due to 'implicit' */
+// protected /* can't 'private' due to 'implicit' */
 object amevMonadificativeImpl {
 //
 
@@ -100,21 +100,13 @@ def shallBeConsideredPrivate(access: Int): Boolean = {
                      )
 }
 
-trait TsConfig {
-   
-   /**
-    * 
-    * whether the output would-be `.d.ts` file,
-    * rather than regular `.ts` or `.js`
-    * 
-    */
-   val isForTypeDeclarationFile : Boolean
+export cbsq.meta.asm.jsgen.TsConfig
 
-}
-object TsConfig {
-   given TsConfig with {
-      final val isForTypeDeclarationFile = true
-   }
+@deprecated
+given defaultTsConfig : TsConfig with {
+
+   final val isForTypeDeclarationFile = true
+
 }
 
 extension (dest: org.objectweb.asm.ClassVisitor) {
