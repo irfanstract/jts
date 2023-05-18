@@ -37,8 +37,9 @@ val opcodeTable = {
    .filterNot((name, _) => {
       val AsmVerS = "ASM(.+?)".r
       val MethodUnreflectTYpe = "H_(.+?)".r
+      val FrameDeltaType = "F_(.+?)".r
       name match
-         case AsmVerS(_) | MethodUnreflectTYpe(_) => true
+         case AsmVerS(_) | FrameDeltaType(_) | MethodUnreflectTYpe(_) => true
          case _ => false
       
    })
@@ -61,6 +62,7 @@ val opcodeTable = {
 val opcodeNameTable = {
    opcodeTable
    .map(_.swap)
+   .appended((-1, "(opcode -1)") )
    .toMap
 }
 
