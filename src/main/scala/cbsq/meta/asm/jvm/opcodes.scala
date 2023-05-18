@@ -36,10 +36,15 @@ val opcodeTable = {
    asmOpcodesConstsTable
    .filterNot((name, _) => {
       val AsmVerS = "ASM(.+?)".r
+      val AccessFlagBitConstName = "ACC_(.+?)".r
       val MethodUnreflectTYpe = "H_(.+?)".r
       val FrameDeltaType = "F_(.+?)".r
+      val FrameElementType = "(TOP|INTEGER|LONG|FLOAT|DOUBLE|NULL|UNITIALIZED_THIS)".r
       name match
-         case AsmVerS(_) | FrameDeltaType(_) | MethodUnreflectTYpe(_) => true
+         case AsmVerS(_) =>
+            true
+         case AccessFlagBitConstName(_) | FrameDeltaType(_) | FrameElementType(_*) | MethodUnreflectTYpe(_) =>
+            true
          case _ => false
       
    })
