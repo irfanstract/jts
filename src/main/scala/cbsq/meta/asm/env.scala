@@ -13,11 +13,6 @@ package cbsq.meta.asm
 
 
 
-@annotation.experimental
-def ??? = {
-   throw NotImplementedError()
-}
-
 object utilityImplicits {
    
    extension (o: java.io.Writer) {

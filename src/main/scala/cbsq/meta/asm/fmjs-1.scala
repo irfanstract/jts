@@ -256,42 +256,12 @@ def wsnImpl() = {
                o println s"     * the operand-stack states shall be const `$operandsFmt`s ;"
                o println s"     * those const(s) should be written in a way them statically-analysable ;"
                o println s"     */"
-               val initialStackState = ({
-                  import cbsq.meta.asm.jvm.FqnStronumericPair
-                  import cbsq.meta.asm.jvm.JbltOpdStackState
-                  import cbsq.meta.asm.jvmc.Jblt
-                  Jblt.OpdState[FqnStronumericPair[?] ](
-                     // TODO
-                     opdStack = (
-                        JbltOpdStackState.byFromLeftRightwards((
-                           IndexedSeq.tabulate((3))(i => ("lclv", i) )
-                        ))
-                     ) ,
-                     storage = IndexedSeq.empty ,
-                  )
-               })
                ({
                   // import cbsq.meta.asm.jvmc.formatStackReturnRelative
                   val stackAtOpcodeZero = operandsForIndex(0) + "$stack"
                   o println s"    const ${stackAtOpcodeZero } = args "
                })
-               for (((instr, instrOrdinal), opdState) <- ({
-                  import cbsq.meta.asm.jvm.FqnStronumericPair
-                  import cbsq.meta.asm.jvmc.Jblt
-
-                  (code.nn : asm.tree.MethodNode)
-                  .instructions
-                  .asScala
-                  .toSeq
-                  .zipWithIndex
-                  .unfolding[Jblt.OpdState[FqnStronumericPair[?] ] ]((
-                     initialStackState
-                     
-                  ))((state0, item) => {
-                     // TODO
-                     state0
-                  })
-               }) ) {
+               for ((instr, instrOrdinal) <- (code.nn : asm.tree.MethodNode).instructions.asScala.zipWithIndex ) {
                   given cbsq.meta.asm.jvmc.InOpdCtx with {
                      override
                      val operandStackPrefix: String = {
@@ -310,7 +280,7 @@ def wsnImpl() = {
                      o.println()
                   }
                   val instrS = {
-                     instr.toJsBlockLevelStmt(opdState0 = opdState )
+                     instr.toJsBlockLevelStmt()
                      .replaceFirst({
                         import util.matching.Regex.{quoteReplacement, quote}
                         ";\\s*" + (quote("//") + "[\\S\\s]*?" ).prependedAll("(?:").++(")").++("??") + "\\z"
@@ -454,21 +424,6 @@ trait Sgde
 }
 
 export cbsq.meta.esm.{ExportAllAssignmentKindEnum, ExportAllAssignmentKindEnumImpl }
-
-extension [CC[A] <: collection.SeqOps[A, CC, CC[A]], E](s: CC[E]) {
-
-   def unfolding[Count](v0: Count)(f: (Count, E) => Count): CC[(E, Count)] = {
-      val s1 = s.to(LazyList)
-      Iterator.unfold[(E, Count), (Count, LazyList[E])]((v0, s1))({
-         case (state0, presentlyItem +: remainingItems) =>
-            val state1 = f(state0, presentlyItem)
-            Some(((presentlyItem, state1): (E, Count), (state1, remainingItems)))
-      })
-      .to(s.iterableFactory )
-      // ???
-   }
-   
-}
 
 
 
