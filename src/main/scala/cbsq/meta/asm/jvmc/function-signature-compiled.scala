@@ -104,6 +104,21 @@ extension (this1: MethodDescriptorImpl1) {
 extension (this1: MethodDescriptorImpl1) {
 
 
+         def toJsMethodName(): String = {
+            import this1.{access, name, descriptor }
+            import org.objectweb.asm.Opcodes
+            ({
+               name match {
+                  case s @ ("constructor" | "__proto__" | "prototype") => 
+                     "[\"" + s + "\"]"
+                  case "<init>" => 
+                     "constructor"
+                  case _: String => 
+                     name
+               }
+            }: String)
+         }
+
          def toJsMethodDeclString(): String = ({
             import this1.{access, name, descriptor }
             import org.objectweb.asm.Opcodes
@@ -112,16 +127,7 @@ extension (this1: MethodDescriptorImpl1) {
                this1.computeCompiledArgsTypeName()
             )
             (
-               "" + ({
-                  name match {
-                     case s @ ("constructor" | "__proto__" | "prototype") => 
-                        "[\"" + s + "\"]"
-                     case "<init>" => 
-                        "constructor"
-                     case _: String => 
-                        name
-                  }
-               }: String) + ({
+               "" + this1.toJsMethodName() + ({
                   descriptor match {
                      case _ =>
                         // descriptor

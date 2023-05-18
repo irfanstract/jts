@@ -210,6 +210,12 @@ class wsnImplCtx1() {
                      val opcodeName = (
                         opcodeNameTable.apply(instr.getOpcode())
                      )
+                     extension (f: String) {
+                        def prependedWithDef() = (
+                           f
+                           .prependedAll("const " + (summon[InOpdCtx].formatStackReturnRelative( ) ) + " = " )
+                        )
+                     }
                      instr match {
 
                         case c: asm.tree.InsnNode =>
@@ -226,15 +232,19 @@ class wsnImplCtx1() {
                                  s"return /* ${dataTypeSimpleName } */ (some value) "
                               case _ =>
                                  s"${opcodeName }"
+                                 .prependedWithDef()
                            
                         case c: asm.tree.MethodInsnNode =>
-                           s"${opcodeName } ${c.name }${c.desc } "
+                           val cAsJvmDecom = s"${opcodeName } ${c.name }${c.desc } "
+                           c.toXJsString(documentOriginalSrc = false )
                            .replaceFirst("[\\S\\s]*", "($0)")
-                           .prependedAll("const " + (summon[InOpdCtx].outputPrefix + "$" + "stack$" + 1 ) + " = " )
+                           .prependedWithDef()
+                           .prependedAll(s"/* $cAsJvmDecom */" + "\n")
                            
                         case c: asm.tree.LdcInsnNode =>
                            import c.cst
                            s"ldc ${cst.getClass().getSimpleName() }(${cst })"
+                           .prependedWithDef()
 
                         case c: asm.tree.LabelNode =>
                            s"(label ${c.getLabel() } )"
@@ -258,10 +268,138 @@ class wsnImplCtx1() {
 
                         case c =>
                            s"(opcode ${opcodeName })(.........)"
+                           .prependedWithDef()
 
                      }
                   }
                   instrS + " ;"
+         }
+
+      }
+
+      extension (c: org.objectweb.asm.tree.MethodInsnNode) {
+
+         // TODO
+         def toXJsString(
+            documentOriginalSrc: Boolean = true ,
+            useIife: Boolean = true ,
+            async: Boolean = true ,
+
+         )(using InOpdCtx) : String = {
+            // s"${opcodeName } ${c.name }${c.desc } "
+            ({
+               // import scala.language.unsafeNulls
+               import scala.jdk.CollectionConverters.*
+               import org.objectweb.asm
+               import cbsq.meta.asm.jvm.opcodeNameTable
+               // TODO
+               c.getOpcode() match {
+
+                  case opc @ (asm.Opcodes.INVOKEVIRTUAL | asm.Opcodes.INVOKEINTERFACE | asm.Opcodes.INVOKESPECIAL | asm.Opcodes.INVOKESTATIC) =>
+                     val receiverCount = (
+                        opc match
+                           case asm.Opcodes.INVOKEVIRTUAL | asm.Opcodes.INVOKEINTERFACE =>
+                              1
+                           case asm.Opcodes.INVOKESPECIAL =>
+                              1
+                           case asm.Opcodes.INVOKESTATIC | asm.Opcodes.INVOKEDYNAMIC => 
+                              0
+                        
+                     ) : Int
+                     val odst = (
+                     NativeSigImpl(access = 0x0, name = c.name.nn, descriptor0 = {
+                        NativeSigImpl.Bds.apply(descriptor = c.desc.nn, signature0 = null )
+                     })
+                     )
+                     val argdsc = (
+                        asm.Type.getType(odst.descriptor).nn
+                     )
+                     val receiverAlias = (
+                        "ths1"
+                     )
+                     val nonReceiverArgsVarNames = (
+                        argdsc
+                        .getArgumentTypes().nn.toIndexedSeq
+                        .indices
+                        .map(i => s"arg$i")
+                     )
+                     val nonReceiverArgsSpread = (
+                        nonReceiverArgsVarNames
+                        .map(_ + ",").mkString
+                     )
+                     val nonReceiverArgsSpreadReversed = (
+                        nonReceiverArgsVarNames
+                        .reverse
+                        .map(_ + ",").mkString
+                     )
+                     (
+                        odst
+                        .toJsMethodName()
+                        .++(/* async */ (
+                           // TODO
+                           if async then "Asynchronously"
+                           else ""
+                        )).nn
+                        .++(s"($nonReceiverArgsSpread )")
+                        .prependedAll(".")
+                        .prependedAll(receiverAlias )
+                        .++((
+                           if documentOriginalSrc then s" /* $argdsc */"
+                           else ""
+                        ))
+                        .replaceFirst("[\\S\\s]*", /* async */ (
+                           if async then "await $0"
+                           else "$0"
+                        )).nn
+                        .replaceFirst("[\\S\\s]*", (
+                           "{ const returnVal = ($0) ; return [returnVal, ...unusedOpdStackValues] /* as const */ ; }"
+                        )).nn
+                     ) match
+                     case s =>
+                        import util.matching.Regex.{quote, quoteReplacement}
+                        val asw = (
+                           if async then "async"
+                           else ""
+                        )
+                        val awt = (
+                           if async then "await"
+                           else ""
+                        )
+                        if useIife then 
+                           s
+                           .replaceFirst("[\\S\\s]*", (
+                              receiverCount match {
+                                 case 0 => s"$asw ([${nonReceiverArgsSpreadReversed                } ...unusedOpdStackValues]) => " + "$0"
+                                 case 1 => s"$asw ([$nonReceiverArgsSpreadReversed $receiverAlias, ...unusedOpdStackValues]) => " + "$0"
+                              }
+                           )).nn
+                           .replaceFirst("[\\S\\s]*", (
+                              "($0 )" + quoteReplacement(s"(${summon[InOpdCtx ].formatStackOperandRelative( ) })")
+                           )).nn
+                           .replaceFirst("[\\S\\s]*", (
+                              s"$awt $$0"
+                           )).nn
+                        else {
+                           val stackRef = (
+                              summon[InOpdCtx ].formatStackOperandRelative( )
+                           )
+                           s
+                           .replaceFirst("[\\S\\s]*", ({
+                              receiverCount match {
+                                 case 0 => s"$awt ($asw () => { const [${nonReceiverArgsSpreadReversed                      } ...unusedOpdStackValues, ] = " + quoteReplacement(stackRef ) + " ; $0 } )()"
+                                 case 1 => s"$awt ($asw () => { const [${nonReceiverArgsSpreadReversed } ${receiverAlias }, ...unusedOpdStackValues, ] = " + quoteReplacement(stackRef ) + " ; $0 } )()"
+                              }
+                           })).nn
+                        }
+                     
+
+                  case _ =>
+                     import scala.language.unsafeNulls
+                     val opcodeName = opcodeNameTable(c.getOpcode() )
+                     s"${opcodeName } ${c.name }${c.desc } "
+
+               }
+            })
          }
 
       }
@@ -335,8 +473,19 @@ trait Sdc {
  * 
  */
 trait InOpdCtx {
-   val operandsPrefix: String
-   val outputPrefix: String
+   val operandStackPrefix: String
+   val returnValueStackPrefix: String
+}
+
+extension (this1: InOpdCtx) {
+
+   def formatStackOperandRelative() = {
+      this1.operandStackPrefix + "$" + "stack"
+   }
+   def formatStackReturnRelative() = {
+      this1.returnValueStackPrefix + "$" + "stack"
+   }
+   
 }
 
 

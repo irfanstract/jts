@@ -245,7 +245,7 @@ def wsnImpl() = {
                import cbsq.meta.asm.jvm.opcodeNameTable
                o println "  {"
                val operandsFmt = {
-                  "code$<index>$vals"
+                  "code$<index>$operands"
                }
                def operandsForIndex(instrOrdinal: Int): String = {
                         import scala.util.matching.Regex.{quote, quoteReplacement}
@@ -255,11 +255,11 @@ def wsnImpl() = {
                for ((instr, instrOrdinal) <- (code.nn : asm.tree.MethodNode).instructions.asScala.zipWithIndex ) {
                   given cbsq.meta.asm.jvmc.InOpdCtx with {
                      override
-                     val operandsPrefix: String = {
+                     val operandStackPrefix: String = {
                         operandsForIndex(instrOrdinal)
                      }
                      override
-                     val outputPrefix: String = {
+                     val returnValueStackPrefix: String = {
                         operandsForIndex(instrOrdinal + 1)
                      }
                   }
