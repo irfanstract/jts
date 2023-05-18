@@ -282,7 +282,7 @@ class wsnImplCtx1() {
          // TODO
          def toXJsString(
             documentOriginalSrc: Boolean = true ,
-            useIife: Boolean = true ,
+            useIife: Boolean = false ,
             async: Boolean = true ,
 
          )(using InOpdCtx) : String = {
