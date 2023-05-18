@@ -66,6 +66,28 @@ val opcodeNameTable = {
    .toMap
 }
 
+def getOpcodeDataTypeCanonicalName(what: String): String = {
+                  import scala.language.unsafeNulls
+                  what match {
+
+                     case "" => 
+                        "void"
+
+                     case "I" => 
+                        "i32"
+                     case "L" => 
+                        "i64"
+                     case "F" => 
+                        "f32"
+                     case "D" => 
+                        "f64"
+                        
+                     case "A" => 
+                        "Object | Null"
+
+                  }
+}
+
 
 
 
