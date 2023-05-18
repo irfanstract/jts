@@ -36,7 +36,9 @@ trait ERpk extends
    with ERpkImplicits
 {
 
-   extension (name0: ow.Type) {
+   import org.objectweb.asm
+
+   extension (name0: asm.Type) {
 
       /**
        * 
@@ -82,7 +84,7 @@ trait ERpk extends
     * return code which reference the `namespace` obj
     *
     */
-   def rpkName(superName: ow.Type): String
+   def rpkName(superName: asm.Type): String
 
    val canOmitPrivateMethods: Boolean
    
@@ -94,6 +96,12 @@ trait ERpk extends
     */
    @deprecated("TODO")
    def getBaseTemplate() : WsnPwEmitter
+
+   extension (instr: asm.tree.AbstractInsnNode) {
+
+      def toJsBlockLevelStmt()(using InOpdCtx, Sdc): String
+
+   }
 
 }
 
@@ -191,12 +199,80 @@ class wsnImplCtx1() {
          baseTemplate
       }
       
+      extension (instr: org.objectweb.asm.tree.AbstractInsnNode) {
+
+         def toJsBlockLevelStmt()(using InOpdCtx, Sdc): String = {
+                  import scala.language.unsafeNulls
+                  import scala.jdk.CollectionConverters.*
+                  import org.objectweb.asm
+                  import cbsq.meta.asm.jvm.opcodeNameTable
+                  val instrS = {
+                     val opcodeName = (
+                        opcodeNameTable.apply(instr.getOpcode())
+                     )
+                     instr match {
+
+                        case c: asm.tree.InsnNode =>
+                           val ReturnStmtOpName = "(\\w+)RETURN".r
+                           val opcodeName = (
+                              opcodeNameTable.apply(c.getOpcode())
+                           )
+                           opcodeName match
+                              case ReturnStmtOpName(what) =>
+                                 val dataTypeSimpleName = {
+                                    import cbsq.meta.asm.jvm.getOpcodeDataTypeCanonicalName
+                                    getOpcodeDataTypeCanonicalName(what)
+                                 }
+                                 s"return /* ${dataTypeSimpleName } */ (some value) "
+                              case _ =>
+                                 s"${opcodeName }"
+                           
+                        case c: asm.tree.MethodInsnNode =>
+                           s"${opcodeName } ${c.name }${c.desc } "
+                           .replaceFirst("[\\S\\s]*", "($0)")
+                           .prependedAll("const " + (summon[InOpdCtx].outputPrefix + "$" + "stack$" + 1 ) + " = " )
+                           
+                        case c: asm.tree.LdcInsnNode =>
+                           import c.cst
+                           s"ldc ${cst.getClass().getSimpleName() }(${cst })"
+
+                        case c: asm.tree.LabelNode =>
+                           s"(label ${c.getLabel() } )"
+                        case c: asm.tree.FrameNode =>
+                           opcodeName match {
+                              case "F_NEW" | "F_FULL" =>
+                                 Seq(
+                                    s"/* new frame: L ${c.local } */ " ,
+                                    s"/*            S ${c.stack } */ " ,
+                                 ).mkString("\n")
+                              case _ =>
+                                 s"/* frame chg ${opcodeName }(......) */ "
+                           }
+                        case c: asm.tree.LineNumberNode =>
+                           val lineNumber = c.line
+                           val srcFileName = summon[Sdc].srcFileName
+                           val ls = {
+                              "" + srcFileName + ":" + lineNumber
+                           }
+                           s"/* line ${ls } */"
+
+                        case c =>
+                           s"(opcode ${opcodeName })(.........)"
+
+                     }
+                  }
+                  instrS + " ;"
+         }
+
+      }
+
    }
    /* avoid using wildcard imports as there are other stuffs */ 
    export eRpkImpl.getBaseTemplate
    export eRpkImpl.canOmitPrivateMethods
    export eRpkImpl.{getCanonicalName, getSimpleName}
    export eRpkImpl.{compileInlineLevelRef}
+   export eRpkImpl.toJsBlockLevelStmt
 
    export cbsq.meta.asm.jvm.{MethodDescriptorImpl1 as NativeSigImpl }
    export cbsq.meta.asm.jvmc.toJsMethodDeclString
@@ -242,6 +318,25 @@ extension (o: java.io.PrintWriter) {
       //
    }
 
+}
+
+/**
+ * 
+ * source-file info
+ * 
+ */
+trait Sdc {
+   val srcFileName: String
+}
+
+/**
+ * 
+ * current opcode info locals
+ * 
+ */
+trait InOpdCtx {
+   val operandsPrefix: String
+   val outputPrefix: String
 }
 
 
