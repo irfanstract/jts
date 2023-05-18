@@ -220,16 +220,37 @@ class wsnImplCtx1() {
 
                         case c: asm.tree.InsnNode =>
                            val ReturnStmtOpName = "(\\w+)RETURN".r
+                           val VConstYOpName = "(\\w)CONST_(.+)".r
                            val opcodeName = (
                               opcodeNameTable.apply(c.getOpcode())
                            )
                            opcodeName match
+
                               case ReturnStmtOpName(what) =>
                                  val dataTypeSimpleName = {
                                     import cbsq.meta.asm.jvm.getOpcodeDataTypeCanonicalName
                                     getOpcodeDataTypeCanonicalName(what)
                                  }
                                  s"return /* ${dataTypeSimpleName } */ (some value) "
+                                 
+                              case VConstYOpName(typ @ ("I" | "L" | "D"), cvString) =>
+                                 // TODO
+                                 (summon[InOpdCtx].formatStackOperandRelative( ) )
+                                 .replaceFirst("[\\S\\s]*", "[VALUE, $0]".replace("VALUE", cvString ) )
+                                 .prependedWithDef()
+                                 .prependedAll(s"/* ${typ}CONST_${cvString } */" + "\n")
+
+                              case "ACONST_NULL" =>
+                                 // TODO
+                                 (summon[InOpdCtx].formatStackOperandRelative( ) )
+                                 .replaceFirst("[\\S\\s]*", "[VALUE, $0]".replace("VALUE", "null" ) )
+                                 .prependedWithDef()
+
+                              case "NOP" | "NOOP" =>
+                                 (summon[InOpdCtx].formatStackOperandRelative( ) )
+                                 .appendedAll(" /* NOOP; no change in opd-stack */")
+                                 .prependedWithDef()
+
                               case _ =>
                                  s"${opcodeName }"
                                  .prependedWithDef()
