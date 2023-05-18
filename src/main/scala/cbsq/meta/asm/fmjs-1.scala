@@ -280,18 +280,17 @@ def wsnImpl() = {
                      o.println()
                   }
                   val instrS = {
-                     // instr.toJsBlockLevelStmt()
-                     // .replaceFirst({
-                     //    import util.matching.Regex.{quoteReplacement, quote}
-                     //    ";\\s*" + (quote("//") + "[\\S\\s]*?" ).prependedAll("(?:").++(")").++("??") + "\\z"
-                     // }, "")
-                     // // .appendedAll(" ;")
-                     // // .prependedAll("\n")
-                     // // .prependedAll({
-                     // //    "const " + (operandsForIndex(instrOrdinal) + "$im1") + " = " + (operandsForIndex(instrOrdinal + -1) + "$om1") + " ;"
-                     // // } )
-                     // // .replaceFirst("[\\S\\s]*", "{ $0 }")
-                     ??? : String
+                     instr.toJsBlockLevelStmt()
+                     .replaceFirst({
+                        import util.matching.Regex.{quoteReplacement, quote}
+                        ";\\s*" + (quote("//") + "[\\S\\s]*?" ).prependedAll("(?:").++(")").++("??") + "\\z"
+                     }, "")
+                     // .appendedAll(" ;")
+                     // .prependedAll("\n")
+                     // .prependedAll({
+                     //    "const " + (operandsForIndex(instrOrdinal) + "$im1") + " = " + (operandsForIndex(instrOrdinal + -1) + "$om1") + " ;"
+                     // } )
+                     // .replaceFirst("[\\S\\s]*", "{ $0 }")
                   }
                   o.println(s"${instrS.indent(2 * 2).dropRight(1) } ;" )
                }
