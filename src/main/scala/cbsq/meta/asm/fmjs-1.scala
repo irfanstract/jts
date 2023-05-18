@@ -252,6 +252,10 @@ def wsnImpl() = {
                         operandsFmt
                         .replaceAll(quote("<index>"), ((instrOrdinal).toString().reverse.padTo(3, '0').reverse) )
                }
+               o println s"    /* "
+               o println s"     * the operand-stack states shall be const `$operandsFmt`s ;"
+               o println s"     * those const(s) should be written in a way them statically-analysable ;"
+               o println s"     */"
                for ((instr, instrOrdinal) <- (code.nn : asm.tree.MethodNode).instructions.asScala.zipWithIndex ) {
                   given cbsq.meta.asm.jvmc.InOpdCtx with {
                      override
@@ -262,6 +266,13 @@ def wsnImpl() = {
                      val returnValueStackPrefix: String = {
                         operandsForIndex(instrOrdinal + 1)
                      }
+                  }
+                  /**
+                   * a *label* might indicate possibly-large linebreak and
+                   * the generated JS would likely have been way congested
+                   */
+                  if instr.isInstanceOf[asm.tree.LabelNode] then {
+                     o.println()
                   }
                   val instrS = {
                      instr.toJsBlockLevelStmt()
