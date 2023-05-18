@@ -256,6 +256,11 @@ def wsnImpl() = {
                o println s"     * the operand-stack states shall be const `$operandsFmt`s ;"
                o println s"     * those const(s) should be written in a way them statically-analysable ;"
                o println s"     */"
+               ({
+                  // import cbsq.meta.asm.jvmc.formatStackReturnRelative
+                  val stackAtOpcodeZero = operandsForIndex(0) + "$stack"
+                  o println s"    const ${stackAtOpcodeZero } = args "
+               })
                for ((instr, instrOrdinal) <- (code.nn : asm.tree.MethodNode).instructions.asScala.zipWithIndex ) {
                   given cbsq.meta.asm.jvmc.InOpdCtx with {
                      override

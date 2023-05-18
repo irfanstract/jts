@@ -97,11 +97,12 @@ trait ERpk extends
    @deprecated("TODO")
    def getBaseTemplate() : WsnPwEmitter
 
-   extension (instr: asm.tree.AbstractInsnNode) {
-
-      def toJsBlockLevelStmt()(using InOpdCtx, Sdc): String
-
-   }
+   /* can't put this method here; this method makes assumption of the target platform being JS/ES/TS */
+   // extension (instr: asm.tree.AbstractInsnNode) {
+   // 
+   //    def toJsBlockLevelStmt()(using InOpdCtx, Sdc): String
+   // 
+   // }
 
 }
 
@@ -233,7 +234,7 @@ class wsnImplCtx1() {
                                  }
                                  s"return /* ${dataTypeSimpleName } */ (some value) "
                                  
-                              case VConstYOpName(typ @ ("I" | "L" | "D"), cvString) =>
+                              case VConstYOpName(typ @ ("I" | "L" | "F" | "D"), cvString) =>
                                  // TODO
                                  (summon[InOpdCtx].formatStackOperandRelative( ) )
                                  .replaceFirst("[\\S\\s]*", "[VALUE, $0]".replace("VALUE", cvString ) )
@@ -268,7 +269,9 @@ class wsnImplCtx1() {
                            .prependedWithDef()
 
                         case c: asm.tree.LabelNode =>
-                           s"(label ${c.getLabel() } )"
+                           s"/* label: ${c.getLabel() } ; */"
+                           .appendedAll(" ")
+                           .appendedAll(summon[InOpdCtx].formatStackOperandRelative( ) )
                         case c: asm.tree.FrameNode =>
                            opcodeName match {
                               case "F_NEW" | "F_FULL" =>
