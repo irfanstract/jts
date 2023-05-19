@@ -168,6 +168,51 @@ val ciwERpkToXjsstReturnConcrete21 = (
 .failed
 .get
 
+(util.Try {
+      ciw.eRpkImpl.toXJsString21(
+
+         opc = { import asm.Opcodes.* ; INVOKESTATIC } ,
+         odst = {
+            MethodDescriptorImpl1(access = {
+               import asm.Opcodes.*
+               ACC_PUBLIC   
+            } , name = "apply", descriptor0 = MethodDescriptorImpl1.Bds.apply(descriptor = "(IJJLjava/lang/Object;)Z", signature0 = null) )
+         } ,
+         opdState0 = s23 ,
+
+         documentOriginalSrc = true ,
+         async = false ,
+
+      )(using mockupOpc) match {
+         case o =>
+            (o.transliteratedForm , o.resultingOpdState)
+      }
+})
+.failed
+.get
+
+(util.Try {
+      ciw.eRpkImpl.toXJsString21(
+
+         opc = { import asm.Opcodes.* ; INVOKESTATIC } ,
+         odst = {
+            MethodDescriptorImpl1(access = {
+               import asm.Opcodes.*
+               ACC_PUBLIC   
+            } , name = "apply", descriptor0 = MethodDescriptorImpl1.Bds.apply(descriptor = "(IJF)Ljava/lang/Object;", signature0 = null) )
+         } ,
+         opdState0 = s23 ,
+
+         documentOriginalSrc = true ,
+         async = false ,
+
+      )(using mockupOpc) match {
+         case o =>
+            (o.transliteratedForm , o.resultingOpdState)
+      }
+})
+.get
+
 
 "/"
 
