@@ -357,6 +357,10 @@ class analyseMethodInvocOpcTranslitImpl(
             opdStackState0
             .poppedN(receiverCount + nonReceiverArity )
          }
+         require((
+            (receiverCount + nonReceiverArity )
+            <= vrs0.length
+         ), s"not enough on-stack items -- actual ${vrs0.length}, required $receiverCount + ${nonReceiverArity} ")
 
          val vrs = (
             vrs0
