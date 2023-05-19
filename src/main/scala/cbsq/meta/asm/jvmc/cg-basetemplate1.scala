@@ -680,7 +680,21 @@ class analyseMethodInvocOpcTranslitImpl(
                opdState0.opdStack
          )
 
+         /**
+          * 
+          * after popping-off
+          * the topmost *n* items
+          * (the args (conditionally including the receiver) to the invoc )
+          * 
+          */
          val (opdStackState1, vrs0) = {
+            /**
+             * 
+             * after popping-off
+             * the topmost *n* items
+             * (the args (conditionally including the receiver) to the invoc )
+             * 
+             */
             opdStackState0
             .poppedN(receiverCount + nonReceiverArity )
          }
@@ -706,9 +720,34 @@ class analyseMethodInvocOpcTranslitImpl(
             .map(_ + ",").mkString
          )
 
-         // val opdStackState2 = (
-         //    opdStackState1
-         // )
+         /**
+          * 
+          * after adding conditional (ie for non-void returns) return-value
+          * 
+          */
+         val opdStackState2 = (
+            opdStackState1
+            .pushedAll({
+               ({
+                  asm.Type.getType(odst.descriptor ).nn
+                  .getReturnType().nn
+               }) match {
+                  case returnType =>
+                     if returnType == asm.Type.VOID_TYPE  then
+                        Seq()
+                     else {
+                        opdState0.afterLdcOpaque
+                        .opdStack
+                        .poppedN(1)._2
+                     }
+               }
+            } )
+         )
+
+         val opdStackStateFinal = (
+            opdStackState2
+         )
+         
          
    
 }
