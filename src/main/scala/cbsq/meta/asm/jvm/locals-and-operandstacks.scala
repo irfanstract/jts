@@ -17,6 +17,8 @@ package cbsq.meta.asm.jvm
 
 
 
+object jblss {
+   
 opaque type JbltOpdStackState[+E]
    <: AnyRef with Matchable
    = IndexedSeq[E]
@@ -60,8 +62,52 @@ object JbltOpdStackState {
        * always from the right-hand end
        * 
        */
-      def poppedN(n: Int): (JbltOpdStackState[E], IndexedSeq[E]) = {
+      def poppedNImpl(n: Int): (JbltOpdStackState[E], IndexedSeq[E]) = {
          s0 splitAt(s0.length + -n )
+      }
+
+   }
+
+   export jblssExtraOps.{poppedN, poppedOne}
+
+   object byFromLeftRightwards {
+      
+      def apply[E](values: IndexedSeq[E]): JbltOpdStackState[E] = {
+         values
+      }
+
+      def unapply[E](e: JbltOpdStackState[E]) = {
+         Some(e : IndexedSeq[E])
+      }
+
+   }
+
+   lazy val empty = {
+      byFromLeftRightwards(IndexedSeq() )
+   }
+   
+}
+
+}
+
+object jblssExtraOps {
+
+   export jblss.JbltOpdStackState
+   
+   /**
+    * 
+    * extracted out, to avoid (unexpected) compiler-done dealiasing
+    * 
+    */
+   extension [E](s0: JbltOpdStackState[E] ) {
+
+      /**
+       * 
+       * always from the right-hand end
+       * 
+       */
+      def poppedN(n: Int): (JbltOpdStackState[E], IndexedSeq[E]) = {
+         s0 poppedNImpl(n)
       }
 
       /**
@@ -84,23 +130,9 @@ object JbltOpdStackState {
 
    }
 
-   object byFromLeftRightwards {
-      
-      def apply[E](values: IndexedSeq[E]): JbltOpdStackState[E] = {
-         values
-      }
-
-      def unapply[E](e: JbltOpdStackState[E]) = {
-         Some(e : IndexedSeq[E])
-      }
-
-   }
-
-   lazy val empty = {
-      byFromLeftRightwards(IndexedSeq() )
-   }
-   
 }
+
+export jblss.JbltOpdStackState
 
 // sealed
 // case class FqnStronumericPair[+E <: String | BigInt](elems: IndexedSeq[E])
