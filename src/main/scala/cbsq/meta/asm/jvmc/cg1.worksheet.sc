@@ -78,7 +78,8 @@ val mockupOpc = {
 (
    ciw.eRpkImpl.toXJsString21(
 
-      opc = { import asm.Opcodes.* ; INVOKEVIRTUAL } ,
+      opc = { import asm.Opcodes ; Opcodes.INVOKEVIRTUAL } ,
+      rct = { import language.unsafeNulls ; asm.Type.getObjectType("myownexample/Bar") },
       odst = {
          MethodDescriptorImpl1(access = {
             import asm.Opcodes.*
@@ -99,7 +100,8 @@ val mockupOpc = {
 val ciwERpkToXjsstReturnConcrete21 = (
    ciw.eRpkImpl.toXJsString21(
 
-      opc = { import asm.Opcodes.* ; INVOKEVIRTUAL } ,
+      opc = { import asm.Opcodes ; Opcodes.INVOKEVIRTUAL } ,
+      rct = { import language.unsafeNulls ; asm.Type.getObjectType("myownexample/Bar") },
       odst = {
          MethodDescriptorImpl1(access = {
             import asm.Opcodes.*
@@ -127,7 +129,8 @@ val ciwERpkToXjsstReturnConcrete21 = (
 (
    ciw.eRpkImpl.toXJsString21(
 
-      opc = { import asm.Opcodes.* ; INVOKEVIRTUAL } ,
+      opc = { import asm.Opcodes ; Opcodes.INVOKEVIRTUAL } ,
+      rct = { import language.unsafeNulls ; asm.Type.getObjectType("myownexample/Bar") },
       odst = {
          MethodDescriptorImpl1(access = {
             import asm.Opcodes.*
@@ -148,7 +151,8 @@ val ciwERpkToXjsstReturnConcrete21 = (
 (util.Try {
       ciw.eRpkImpl.toXJsString21(
 
-         opc = { import asm.Opcodes.* ; INVOKEVIRTUAL } ,
+         opc = { import asm.Opcodes ; Opcodes.INVOKEVIRTUAL } ,
+         rct = { import language.unsafeNulls ; asm.Type.getObjectType("myownexample/Bar") },
          odst = {
             MethodDescriptorImpl1(access = {
                import asm.Opcodes.*
@@ -171,7 +175,8 @@ val ciwERpkToXjsstReturnConcrete21 = (
 (util.Try {
       ciw.eRpkImpl.toXJsString21(
 
-         opc = { import asm.Opcodes.* ; INVOKESTATIC } ,
+         opc = { import asm.Opcodes ; Opcodes.INVOKESTATIC } ,
+         rct = { import language.unsafeNulls ; asm.Type.getObjectType("myownexample/Bar") },
          odst = {
             MethodDescriptorImpl1(access = {
                import asm.Opcodes.*
@@ -194,7 +199,8 @@ val ciwERpkToXjsstReturnConcrete21 = (
 (util.Try {
       ciw.eRpkImpl.toXJsString21(
 
-         opc = { import asm.Opcodes.* ; INVOKESTATIC } ,
+         opc = { import asm.Opcodes ; Opcodes.INVOKESTATIC } ,
+         rct = { import language.unsafeNulls ; asm.Type.getObjectType("myownexample/Bar") },
          odst = {
             MethodDescriptorImpl1(access = {
                import asm.Opcodes.*
@@ -212,6 +218,21 @@ val ciwERpkToXjsstReturnConcrete21 = (
       }
 })
 .get
+
+(util.Try {
+      import language.unsafeNulls
+      asm.Type.getType("(JKM)V")
+})
+
+(util.Try {
+      import language.unsafeNulls
+      java.lang.invoke.MethodType.fromMethodDescriptorString("(JVM)V", null)
+})
+
+(util.Try {
+      import language.unsafeNulls
+      java.lang.invoke.MethodType.fromMethodDescriptorString("(JKM)V", null)
+})
 
 
 "/"
