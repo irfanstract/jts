@@ -367,7 +367,7 @@ class analyseMethodInvocOpcTranslitImpl(
             .map(_.toSingleWordNameString() )
          )
 
-         val (receiverAlias +: nonReceiverArgsVarNames) = {
+         val (xra1 +: nonReceiverArgsVarNames) = {
             (vrs.take(receiverCount ).padTo(1, "undefined") ++ (
                vrs.drop(receiverCount )
             ) )

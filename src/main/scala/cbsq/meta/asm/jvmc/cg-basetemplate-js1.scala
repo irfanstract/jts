@@ -400,6 +400,35 @@ class wsnImplCtx1() {
                      )
                      import opcodeTranslitAnalysis.*
 
+                     val receiverAlias = ({
+                        import asm.Opcodes
+                        opc match {
+                           
+                           case Opcodes.INVOKEDYNAMIC | Opcodes.INVOKESTATIC =>
+                              val compiledPrefix = {
+                                 import eRpkImpl.{compileInlineLevelRef as compileInlineLevelRef1}
+                                 rct.nn
+                                 .compileInlineLevelRef1()
+                              }
+                              compiledPrefix
+                              
+                           case Opcodes.INVOKESPECIAL =>
+                              val compiledRct = {
+                                 import eRpkImpl.{compileInlineLevelRef as compileInlineLevelRef1}
+                                 rct.nn
+                                 .compileInlineLevelRef1()
+                              }
+                              val receiverRef = {
+                                 vrs.head
+                              }
+                              ((compiledRct ++ "." ++ "$cbsqInvokespNsp" ++ s"($receiverRef)"))
+                              
+                           case Opcodes.INVOKEVIRTUAL | Opcodes.INVOKEINTERFACE =>
+                              vrs.head
+
+                        }
+                     } : String)
+
                      val optionalReturnValueCompiledVarName = (
                         (opdStackState2.fromLeftRightwards.toSet diff opdStackState1.fromLeftRightwards.toSet )
                         .lastOption
