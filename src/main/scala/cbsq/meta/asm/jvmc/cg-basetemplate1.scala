@@ -586,6 +586,137 @@ object Jblt {
 
 
 
+private
+val checkIsMethodInvocOpcode = {
+   // import scala.language.unsafeNulls
+   import scala.jdk.CollectionConverters.*
+   import org.objectweb.asm
+   import cbsq.meta.asm.jvm.opcodeNameTable
+
+   ({
+      case opc @ (asm.Opcodes.INVOKEVIRTUAL | asm.Opcodes.INVOKEINTERFACE | asm.Opcodes.INVOKESPECIAL | asm.Opcodes.INVOKESTATIC) =>
+   } : PartialFunction[Int, Unit] )
+}
+
+opaque type MethodInvocOpcode
+   <: Int
+   = Int
+
+object MethodInvocOpcode {
+
+   def unapply(v: Int) = checkIsMethodInvocOpcode isDefinedAt(v)
+   
+   def check(v: Int): MethodInvocOpcode = {
+      checkIsMethodInvocOpcode(v)
+      v
+   }
+
+}
+
+class analyseMethodInvocOpcImpl(opc: MethodInvocOpcode, odst: MethodDescriptorImpl1) {
+
+         // import scala.language.unsafeNulls
+         import scala.jdk.CollectionConverters.*
+         import org.objectweb.asm
+         import cbsq.meta.asm.jvm.opcodeNameTable
+
+         val receiverCount = (
+            opc match
+               case asm.Opcodes.INVOKEVIRTUAL | asm.Opcodes.INVOKEINTERFACE =>
+                  1
+               case asm.Opcodes.INVOKESPECIAL =>
+                  1
+               case asm.Opcodes.INVOKESTATIC | asm.Opcodes.INVOKEDYNAMIC => 
+                  0
+            
+         ) : Int
+
+         val argdsc = (
+            asm.Type.getType(odst.descriptor).nn
+         )
+
+         val nonReceiverArgsVarNames0 = (
+            argdsc
+            .getArgumentTypes().nn.toIndexedSeq
+         )
+         
+         val nonReceiverArity = (
+            nonReceiverArgsVarNames0
+            .length
+         )
+
+}
+
+class analyseMethodInvocOpcTranslitImpl(
+   opc: MethodInvocOpcode,
+   odst: MethodDescriptorImpl1,
+   opdState0: Jblt.OpdState[FqnStronumericPair[?] ],
+) {
+
+         // import scala.language.unsafeNulls
+         import scala.jdk.CollectionConverters.*
+         import org.objectweb.asm
+         import cbsq.meta.asm.jvm.opcodeNameTable
+
+         extension (v: NonEmptyTuple ) {
+
+            def toSingleWordNameString(): String = {
+               v
+               .toList.mkString("$")
+            }
+            
+         }
+
+         val opcodeAnalysis = (
+            analyseMethodInvocOpcImpl(MethodInvocOpcode.check(opc), odst)
+         )
+
+         export opcodeAnalysis.receiverCount
+         export opcodeAnalysis.argdsc
+         export opcodeAnalysis.nonReceiverArgsVarNames0
+         export opcodeAnalysis.nonReceiverArity
+
+         val opdStackState0 = (
+               opdState0.opdStack
+         )
+
+         val (opdStackState1, vrs0) = {
+            opdStackState0
+            .poppedN(receiverCount + nonReceiverArity )
+         }
+
+         val vrs = (
+            vrs0
+            .map(_.toSingleWordNameString() )
+         )
+
+         val (receiverAlias +: nonReceiverArgsVarNames) = {
+            (vrs.take(receiverCount ).padTo(1, "undefined") ++ (
+               vrs.drop(receiverCount )
+            ) )
+         }
+
+         val nonReceiverArgsSpread = (
+            nonReceiverArgsVarNames
+            .map(_ + ",").mkString
+         )
+         val nonReceiverArgsSpreadReversed = (
+            nonReceiverArgsVarNames
+            .reverse
+            .map(_ + ",").mkString
+         )
+
+         // val opdStackState2 = (
+         //    opdStackState1
+         // )
+         
+   
+}
+
+
+
+
+
 
 
 
