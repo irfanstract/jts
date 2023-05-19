@@ -19,7 +19,8 @@ package cbsq.meta.asm.jvm
 
 
 
-
+private
+object `method-invoc-opcode`
 
 
 
