@@ -67,16 +67,15 @@ import cbsq.meta.asm.jvmc.InOpdCtx
 
 
 val ciw = wsnImplCtx1()
+
 val mockupOpc = {
    new InOpdCtx {
          val operandStackPrefix      : String = "lval$2"
          val returnValueStackPrefix  : String = "lval$3"
    }
 }
-((new Em {
 
-@annotation.experimental
-def apply() = {
+(
    ciw.eRpkImpl.toXJsString21(
 
       opc = { import asm.Opcodes.* ; INVOKEVIRTUAL } ,
@@ -95,13 +94,37 @@ def apply() = {
       case o =>
          (o.transliteratedForm , o.resultingOpdState)
    }
-}
+)
 
-}) : Em).applyAlt()
-((new Em {
+val ciwERpkToXjsstReturnConcrete21 = (
+   ciw.eRpkImpl.toXJsString21(
 
-@annotation.experimental
-def apply() = {
+      opc = { import asm.Opcodes.* ; INVOKEVIRTUAL } ,
+      odst = {
+         MethodDescriptorImpl1(access = {
+            import asm.Opcodes.*
+            ACC_PUBLIC   
+         } , name = "apply", descriptor0 = MethodDescriptorImpl1.Bds.apply(descriptor = "()Ljava/lang/Object;", signature0 = null) )
+      } ,
+      opdState0 = s23 ,
+
+      documentOriginalSrc = true ,
+      async = false ,
+
+   )(using mockupOpc) match {
+      case o =>
+         (o.transliteratedForm , o.resultingOpdState)
+   }
+)
+
+({
+   val (code, resultingOpdSt) = {
+      ciwERpkToXjsstReturnConcrete21
+   }
+   resultingOpdSt.afterLdcOpaque
+})
+
+(
    ciw.eRpkImpl.toXJsString21(
 
       opc = { import asm.Opcodes.* ; INVOKEVIRTUAL } ,
@@ -114,15 +137,36 @@ def apply() = {
       opdState0 = s23 ,
 
       documentOriginalSrc = true ,
-      async = false ,
+      async = true ,
 
    )(using mockupOpc) match {
       case o =>
          (o.transliteratedForm , o.resultingOpdState)
    }
-}
+)
 
-}) : Em).applyAlt()
+(util.Try {
+      ciw.eRpkImpl.toXJsString21(
+
+         opc = { import asm.Opcodes.* ; INVOKEVIRTUAL } ,
+         odst = {
+            MethodDescriptorImpl1(access = {
+               import asm.Opcodes.*
+               ACC_PUBLIC   
+            } , name = "apply", descriptor0 = MethodDescriptorImpl1.Bds.apply(descriptor = "(IJJ)Ljava/lang/Object;", signature0 = null) )
+         } ,
+         opdState0 = s23 ,
+
+         documentOriginalSrc = true ,
+         async = false ,
+
+      )(using mockupOpc) match {
+         case o =>
+            (o.transliteratedForm , o.resultingOpdState)
+      }
+})
+.failed
+.get
 
 
 "/"
