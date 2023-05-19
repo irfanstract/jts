@@ -234,6 +234,28 @@ val ciwERpkToXjsstReturnConcrete21 = (
       java.lang.invoke.MethodType.fromMethodDescriptorString("(JKM)V", null)
 })
 
+(
+   ciw.eRpkImpl.toXJsString21(
+
+      opc = { import asm.Opcodes ; Opcodes.INVOKESPECIAL } ,
+      rct = { import language.unsafeNulls ; asm.Type.getObjectType("myownexample/Bar") },
+      odst = {
+         MethodDescriptorImpl1(access = {
+            import asm.Opcodes.*
+            ACC_PUBLIC   
+         } , name = "<init>", descriptor0 = MethodDescriptorImpl1.Bds.apply(descriptor = "(II)V", signature0 = null) )
+      } ,
+      opdState0 = s23 ,
+
+      documentOriginalSrc = true ,
+      async = false ,
+
+   )(using mockupOpc) match {
+      case o =>
+         (o.transliteratedForm , o.resultingOpdState)
+   }
+)
+
 
 "/"
 
