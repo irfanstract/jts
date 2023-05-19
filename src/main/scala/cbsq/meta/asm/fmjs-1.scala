@@ -256,6 +256,21 @@ def wsnImpl() = {
                o println s"     * the operand-stack states shall be const `$operandsFmt`s ;"
                o println s"     * those const(s) should be written in a way them statically-analysable ;"
                o println s"     */"
+               val initialStackState = ({
+                  import cbsq.meta.asm.jvm.FqnStronumericPair
+                  import cbsq.meta.asm.jvm.JbltOpdStackState
+                  import cbsq.meta.asm.jvmc.Jblt
+                  Jblt.OpdState[FqnStronumericPair[?] ](
+                     // TODO
+                     opdStack = (
+                        JbltOpdStackState.byFromLeftRightwards((
+                           IndexedSeq.tabulate((3))(i => ("lclv", i) )
+                        ))
+                     ) ,
+                     storage = IndexedSeq.empty ,
+                     lastItemgenState = ("lclv", 1) ,
+                  )
+               })
                ({
                   // import cbsq.meta.asm.jvmc.formatStackReturnRelative
                   val stackAtOpcodeZero = operandsForIndex(0) + "$stack"
