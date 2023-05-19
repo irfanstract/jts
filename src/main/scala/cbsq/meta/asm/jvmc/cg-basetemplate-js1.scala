@@ -378,6 +378,85 @@ class wsnImplCtx1() {
 
       }
 
+      // TODO
+      def toXJsString21(
+         opc: Int ,
+         odst: MethodDescriptorImpl1 ,
+         opdState0: Jblt.OpdState[FqnStronumericPair[?] ],
+         
+         documentOriginalSrc: Boolean ,
+         async: Boolean ,
+
+      )(using InOpdCtx) : Jblt.OfStorageType[FqnStronumericPair[?] ] = {
+                     // import scala.language.unsafeNulls
+                     import scala.jdk.CollectionConverters.*
+                     import org.objectweb.asm
+                     import cbsq.meta.asm.jvm.opcodeNameTable
+                     val opcodeTranslitAnalysis = (
+                        analyseMethodInvocOpcTranslitImpl(MethodInvocOpcode.check(opc), odst, opdState0)
+                     )
+                     import opcodeTranslitAnalysis.*
+                     val newVar = (
+                        (opdStackState2.fromLeftRightwards.toSet diff opdStackState1.fromLeftRightwards.toSet )
+                        .lastOption
+                        .map(_.toSingleWordNameString() )
+                     )
+                     val asw = (
+                        if async then "async"
+                        else ""
+                     )
+                     val awt = (
+                        if async then "await"
+                        else ""
+                     )
+                     import util.matching.Regex.{quote, quoteReplacement}
+                     val compiledCode = (
+                        odst
+                        .toJsMethodName()
+                        .++(/* async */ (
+                           // TODO
+                           if async then "Asynchronously"
+                           else ""
+                        )).nn
+                        .++(s"($nonReceiverArgsSpread )")
+                        .prependedAll(".")
+                        .prependedAll(receiverAlias )
+                        .++((
+                           if documentOriginalSrc then s" /* $argdsc */"
+                           else "" 
+                        ))
+                        .replaceFirst("[\\S\\s]*", /* async */ (
+                           if async then "await $0"
+                           else "$0"
+                        )).nn
+                        .replaceFirst("[\\S\\s]*", (
+                           quoteReplacement(newVar match {
+                              case Some(awt) =>
+                                 s"const ${awt } = "
+                              case None => 
+                                 "/* V */ "
+                           }) + "$0" + " ;"
+                        )).nn
+                        
+                        match {
+                        case s =>
+                           s
+                        }
+                     ) 
+                     new Jblt {
+
+                        override val transliteratedForm = compiledCode
+                        
+                        override
+                        val resultingOpdState: Jblt.OpdState[FqnStronumericPair[?] ] = {
+                           opdState0
+                           .afterPopoffN(receiverCount + nonReceiverArgsVarNames.length )
+                           .afterLdcOpaque
+                        }
+   
+                     }
+      }
+
    }
    /* avoid using wildcard imports as there are other stuffs */ 
    export eRpkImpl.getBaseTemplate
