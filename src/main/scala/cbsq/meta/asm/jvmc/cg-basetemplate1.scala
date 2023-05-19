@@ -512,6 +512,76 @@ extension (this1: InOpdCtx) {
    
 }
 
+export cbsq.meta.asm.jvm.FqnStronumericPair
+
+export cbsq.meta.asm.jvm.JbltOpdStackState
+
+/**
+ * 
+ * the aspect of executing a single opcode
+ * 
+ */
+trait Jblt {
+
+   val transliteratedForm: String
+
+   val resultingOpdState: Jblt.OpdState[Any]
+   
+}
+object Jblt {
+
+   sealed
+   case class OpdState[+E](opdStack: JbltOpdStackState[E], storage: IndexedSeq[E])
+
+   object OpdState
+   {
+
+      extension [OpdStackItem <: FqnStronumericPair[?]](e: OpdState[OpdStackItem ]) {
+
+         def afterLdcOpaque = {
+            val lastName = (
+               e.opdStack
+               .fromLeftRightwards
+               .map(<:<.refl[FqnStronumericPair[?]] )
+               .sortBy({
+                  case e : NonEmptyTuple =>
+                     e.last : Int
+               })
+               .lastOption
+            )
+            val newName = (
+               lastName match {
+                  case Some(value) => 
+                     val (prefix, i) = value
+                     (prefix, i + 1)
+                  case None => 
+                     ("lclv", 0 + 1)
+               }
+            )
+            e.copy(opdStack = e.opdStack match { case s => s pushed newName } )
+         }
+
+         def afterPopoff = {
+            e.copy(opdStack = e.opdStack match { case s => s.poppedOne()._1 } )
+         }
+
+         def afterPopoffN(n: Int) = {
+            Range(0, n)
+            .foldLeft[OpdState[OpdStackItem] ](e)((e, _) => e.afterPopoff )
+         }
+
+      }
+
+   }
+
+   type OfStorageType[+E] = Jblt {
+      
+      val resultingOpdState: Jblt.OpdState[E]
+      
+   }
+
+}
+
 
 
 
