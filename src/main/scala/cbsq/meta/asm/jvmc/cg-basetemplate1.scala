@@ -164,6 +164,22 @@ object Jblt {
       storage: IndexedSeq[E] ,
       lastItemgenState: E ,
    )
+   {
+      
+      override
+      def toString(): String = {
+         "" + "OpdState" + "(" + (
+            Map(
+               "opd-stack" -> opdStack ,
+               "storage" -> storage ,
+               "last-itemgen-state" -> lastItemgenState ,
+            )
+            .map((k, v) => s"$k: $v; ")
+            .mkString
+         ) + ")"
+      }
+
+   }
 
    object OpdState
    {
