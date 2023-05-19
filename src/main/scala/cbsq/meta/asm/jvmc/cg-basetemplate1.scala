@@ -188,14 +188,7 @@ object Jblt {
 
          def afterLdcOpaque = {
             val lastName = (
-               e.opdStack
-               .fromLeftRightwards
-               .map(<:<.refl[FqnStronumericPair[?]] )
-               .sortBy({
-                  case e : NonEmptyTuple =>
-                     e.last : Int
-               })
-               .lastOption
+               Option(e.lastItemgenState)
             )
             val newName = (
                lastName match {
@@ -207,6 +200,7 @@ object Jblt {
                }
             )
             e.copy(opdStack = e.opdStack match { case s => s pushed newName } )
+            .copy(lastItemgenState = newName )
          }
 
          def afterPopoff = {
