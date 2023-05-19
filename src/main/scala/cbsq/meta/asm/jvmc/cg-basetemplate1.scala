@@ -153,6 +153,14 @@ trait Jblt {
 
    val transliteratedForm: String
 
+   /**
+    * 
+    * manages these things at once
+    * - `storage`, to track *the locals*
+    * - `opdStack`, to track *the operand-stack and its values*
+    * - *the namegen which needs to be monotonically-ascending*
+    * 
+    */
    val resultingOpdState: Jblt.OpdState[Any]
    
 }
