@@ -158,6 +158,15 @@ trait Jblt {
 }
 object Jblt {
 
+   /**
+    * 
+    * manages these things at once
+    * - `storage`, to track *the locals*
+    * - `opdStack`, to track *the operand-stack and its values*
+    * - `lastItemgenState`,
+    *    *representing the state of, the namegen which needs to be monotonically-ascending*
+    * 
+    */
    sealed
    case class OpdState[+E](
       opdStack: JbltOpdStackState[E],
