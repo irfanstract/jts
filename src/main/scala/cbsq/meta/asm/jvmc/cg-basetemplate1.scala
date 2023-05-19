@@ -159,7 +159,11 @@ trait Jblt {
 object Jblt {
 
    sealed
-   case class OpdState[+E](opdStack: JbltOpdStackState[E], storage: IndexedSeq[E])
+   case class OpdState[+E](
+      opdStack: JbltOpdStackState[E],
+      storage: IndexedSeq[E] ,
+      lastItemgenState: E ,
+   )
 
    object OpdState
    {
