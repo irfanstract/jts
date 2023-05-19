@@ -381,6 +381,7 @@ class wsnImplCtx1() {
       // TODO
       def toXJsString21(
          opc: Int ,
+         rct: org.objectweb.asm.Type | Null , /* owner or receiver */
          odst: MethodDescriptorImpl1 ,
          opdState0: Jblt.OpdState[FqnStronumericPair[?] ],
          
