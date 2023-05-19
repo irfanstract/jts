@@ -109,7 +109,7 @@ def apply() = {
          MethodDescriptorImpl1(access = {
             import asm.Opcodes.*
             ACC_PUBLIC   
-         } , name = "apply", descriptor0 = MethodDescriptorImpl1.Bds.apply(descriptor = "()Ljava/lang/Object;", signature0 = null) )
+         } , name = "apply", descriptor0 = MethodDescriptorImpl1.Bds.apply(descriptor = "(IJ)Ljava/lang/Object;", signature0 = null) )
       } ,
       opdState0 = s23 ,
 
