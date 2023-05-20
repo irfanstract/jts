@@ -13,6 +13,11 @@ package cbsq.meta.asm
 
 
 
+@annotation.experimental
+def ??? = {
+   throw NotImplementedError()
+}
+
 object utilityImplicits {
    
    extension (o: java.io.Writer) {
@@ -21,6 +26,21 @@ object utilityImplicits {
          new java.io.PrintWriter(o, true)
       }
 
+   }
+
+   extension [CC[A] <: collection.SeqOps[A, CC, CC[A]], E](s: CC[E]) {
+
+      def unfolding[Count](v0: Count)(f: (Count, E) => Count): CC[(E, Count)] = {
+         val s1 = s.to(LazyList)
+         Iterator.unfold[(E, Count), (Count, LazyList[E])]((v0, s1))({
+            case (state0, presentlyItem +: remainingItems) =>
+               val state1 = f(state0, presentlyItem)
+               Some(((presentlyItem, state1): (E, Count), (state1, remainingItems)))
+         })
+         .to(s.iterableFactory )
+         // ???
+      }
+      
    }
 
 }
@@ -32,6 +52,7 @@ def stdOutWriter(o: java.io.OutputStream) : java.io.Writer = {
    new java.io.OutputStreamWriter(o)
 }
 
+export cbsq.meta.util.PwEmitter
 
 
 
@@ -41,33 +62,10 @@ def stdOutWriter(o: java.io.OutputStream) : java.io.Writer = {
 
 
 
-object ow {
 
-   // export org.objectweb.asm.{* }
-   
-   object Opcodes {
-      export org.objectweb.asm.Opcodes.*
-   }
-   
-   export org.objectweb.asm.ModuleVisitor
-   export org.objectweb.asm.ClassVisitor
-   export org.objectweb.asm.ClassReader
-   export org.objectweb.asm.ClassWriter
-   export org.objectweb.asm.AnnotationVisitor
-   export org.objectweb.asm.MethodVisitor
-   
-   export org.objectweb.asm.Attribute
-   export org.objectweb.asm.ConstantDynamic
-   type Handle = org.objectweb.asm.Handle
-   object Handle {
-      export org.objectweb.asm.Handle.*
-   }
-   type Type = org.objectweb.asm.Type
-   object Type {
-      export org.objectweb.asm.Type.*
-   }
 
-}
+
+export cbsq.meta.asm.jvm.ow
 
 
 
