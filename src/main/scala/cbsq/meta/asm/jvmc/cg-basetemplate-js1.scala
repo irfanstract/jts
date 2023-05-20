@@ -364,6 +364,14 @@ class wsnImplCtx1() {
                         )
                         
                      }
+                     def opdStackTopmostItem(i: Int) = {
+                        //
+                        opdState0
+                        .opdStack.
+                        fromRightLeftwards(i)
+                        .toSingleWordNameString()
+                        
+                     } /* opdStackTopmostItem */
                      instr match {
 
                         case c: asm.tree.InsnNode =>
