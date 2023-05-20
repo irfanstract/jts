@@ -126,10 +126,6 @@ trait Sdc {
  */
 trait InOpdCtx {
    
-   val operandStackPrefix: String
-
-   val returnValueStackPrefix: String
-
    extension (v: NonEmptyTuple ) {
 
       def toSingleWordNameString(): String = {

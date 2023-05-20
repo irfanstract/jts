@@ -297,14 +297,6 @@ def wsnImpl() = {
                   ;
                   
                   given cbsq.meta.asm.jvmc.InOpdCtx with {
-                     override
-                     val operandStackPrefix: String = {
-                        operandsForIndex(instrOrdinal)
-                     }
-                     override
-                     val returnValueStackPrefix: String = {
-                        operandsForIndex(instrOrdinal + 1)
-                     }
                   }
                   /**
                    * a *label* might indicate possibly-large linebreak and
