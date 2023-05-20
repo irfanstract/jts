@@ -171,6 +171,8 @@ class wsnImplCtx1() {
                   import cbsq.meta.asm.jvm.opcodeNameTable
                   val InvokeYyy  = "INVOKE(\\w+)".r
                   val YyConstYyy = "(\\w)CONST_(\\w+)".r
+                  val YyLoadOrStore = "(\\w)(LOAD|STORE)".r
+                  val YyArrayLoadOrStore = "(\\w)A(LOAD|STORE)".r
                   extension (opcodeName: String) {
 
                      def ldcTConstOpcodeNamePrependedWithDef(): Jblt.OfStorageType[FqnStronumericPair[?] ] = {
@@ -222,32 +224,47 @@ class wsnImplCtx1() {
 
                         }
                      })
-                     extension (f: String) {
+                     extension (f: String) { /* pop-off */
 
-                        def unaryOpPrependedWithDef(): Jblt.OfStorageType[FqnStronumericPair[?] ] = ({
+                        def popoffPrependedWithDef(): Jblt.OfStorageType[FqnStronumericPair[?] ] = ({
                         new Jblt {
 
                            override
                            val resultingOpdState: Jblt.OpdState[FqnStronumericPair[?] ] = {
                               opdState0
                               .afterPopoff
-                              .afterLdcOpaque
                            }
       
                            override
                            val transliteratedForm = {
-                              val c = summon(using instr)
-                              val varName = (
-                                 resultingOpdState
-                                 .newlyOpdOnstackPushedVarName
-                              )
                               // s"${opcodeName } ${c.name }${c.desc } "
-                              unsupportedOpcodeFallbackCompiledCode
+                              s"/* discarded */ $f ; "
                            }
                            
                         } : Jblt.OfStorageType[FqnStronumericPair[?] ]
                         })
                         
+                     }
+                     def yStorePrependedWithDef(locI: Int): Jblt.OfStorageType[FqnStronumericPair[?] ] = {
+                     new Jblt {
+
+                        val lv = {
+                           opdState0
+                           // .afterLdcOpaque
+                        }
+
+                        override
+                        val resultingOpdState: Jblt.OpdState[FqnStronumericPair[?] ] = {
+                           lv
+                           .afterYStoreOpc(destStorageIndex = locI )
+                        }
+   
+                        override
+                        val transliteratedForm = {
+                           s"/* (?)STORE */ ;"
+                        }
+                        
+                     } : Jblt.OfStorageType[FqnStronumericPair[?] ]
                      }
                      extension (f: String) {
 
@@ -277,6 +294,56 @@ class wsnImplCtx1() {
                      }
                      extension (f: String) {
 
+                        def unaryOpPrependedWithDef(): Jblt.OfStorageType[FqnStronumericPair[?] ] = ({
+                        new Jblt {
+
+                           override
+                           val resultingOpdState: Jblt.OpdState[FqnStronumericPair[?] ] = {
+                              opdState0
+                              .afterPopoff
+                              .afterLdcOpaque
+                           }
+      
+                           override
+                           val transliteratedForm = {
+                              val c = summon(using instr)
+                              val varName = (
+                                 resultingOpdState
+                                 .newlyOpdOnstackPushedVarName
+                              )
+                              // s"${opcodeName } ${c.name }${c.desc } "
+                              // unsupportedOpcodeFallbackCompiledCode
+                              f.ldcPrependedWithDef()
+                              .transliteratedForm
+                           }
+                           
+                        } : Jblt.OfStorageType[FqnStronumericPair[?] ]
+                        })
+                        
+                     }
+                     extension (f: String) {
+
+                        def fixedOpdStackOp(): Jblt.OfStorageType[FqnStronumericPair[?] ] = ({
+                        new Jblt {
+
+                           override
+                           val resultingOpdState: Jblt.OpdState[FqnStronumericPair[?] ] = {
+                              opdState0
+                           }
+      
+                           override
+                           val transliteratedForm = {
+                              // s"${opcodeName } ${c.name }${c.desc } "
+                              // unsupportedOpcodeFallbackCompiledCode
+                              s"$f ; "
+                           }
+                           
+                        } : Jblt.OfStorageType[FqnStronumericPair[?] ]
+                        })
+                        
+                     }
+                     extension (f: String) {
+
                         def gotoPrependedWithDef(): Jblt.OfStorageType[FqnStronumericPair[?] ] = (
                            // tbmt_???
                            new Jblt {
@@ -297,6 +364,13 @@ class wsnImplCtx1() {
                         )
                         
                      }
+                     def opdStackTopmostItem(i: Int) = {
+                        //
+                        opdState0
+                        .opdStack.
+                        fromRightLeftwards(i)
+                        .toSingleWordNameString()
+                     }
                      instr match {
 
                         case c: asm.tree.InsnNode =>
@@ -314,6 +388,17 @@ class wsnImplCtx1() {
                               //    }
                               //    s"return /* ${dataTypeSimpleName } */ (some value) "
                                  
+                              case YyArrayLoadOrStore(typeStr, "STORE") =>
+                                 val assigneeRef = opdStackTopmostItem(i = 2)
+                                 val iRef        = opdStackTopmostItem(i = 1)
+                                 val assigendRef = opdStackTopmostItem(i = 0)
+                                 (s"$assigneeRef[$iRef] = $assigendRef " )
+                                 .popoffPrependedWithDef()
+
+                              case "DUP" =>
+                                 opdStackTopmostItem(i = 0)
+                                 .ldcPrependedWithDef()
+
                               case VConstYOpName(typ @ ("I" | "L" | "F" | "D"), cvString) =>
                                  // // TODO
                                  // (summon[InOpdCtx].formatStackOperandRelative( ) )
@@ -345,32 +430,129 @@ class wsnImplCtx1() {
                               documentOriginalSrc = false ,
                            )
                            
+                        case c: asm.tree.TypeInsnNode =>
+                           import eRpkImpl.{compileInlineLevelRef as compileInlineLevelRef1}
+                           opcodeName match {
+
+                              case "CHECKCAST" =>
+                                 // TODO
+                                 // s"/* `$opcodeName ${c.desc }` */ ${opdStackTopmostItem(i = 0) } "
+                                 s"(${opdStackTopmostItem(i = 0) } ) instanceof ${(asm.Type.getObjectType(c.desc ) ).compileInlineLevelRef1() } "
+                                 .unaryOpPrependedWithDef()
+                                 
+                              case "INSTANCEOF" =>
+                                 // TODO
+                                 s"/* `$opcodeName ${c.desc }` */ true "
+                                 .unaryOpPrependedWithDef()
+                                 
+                              case "NEW" =>
+                                 // TODO
+                                 s"/* `new ${c.desc }` */ ??? "
+                                 .ldcPrependedWithDef()
+                                 
+                              case _ =>
+                                 s"${opcodeName }"
+                                 // .gotoPrependedWithDef()
+                                 .ldcPrependedWithDef()
+                           
+                           }
+                           
+                        case c: asm.tree.FieldInsnNode =>
+                           import eRpkImpl.{compileInlineLevelRef as compileInlineLevelRef1}
+                           opcodeName match {
+
+                              case opc @ ("GETFIELD" | "PUTFIELD") =>
+                                 // TODO
+                                 val iRef        = c.name
+                                 opc match {
+
+                                    case "PUTFIELD" =>
+                                       val assigneeRef = opdStackTopmostItem(i = 1)
+                                       val assigendRef = opdStackTopmostItem(i = 0)
+                                       s"$assigneeRef.${iRef } = ${assigendRef } "
+                                       .popoffPrependedWithDef()
+                                       
+                                    case "GETFIELD" =>
+                                       val assigneeRef = opdStackTopmostItem(i = 0)
+                                       s"$assigneeRef.${iRef } "
+                                       .ldcPrependedWithDef()
+
+                                 }
+                                 
+                              case opc @ ("PUTSTATIC" | "GETSTATIC") =>
+                                 // TODO
+                                 val assigneeRef = (
+                                    asm.Type.getObjectType(c.owner).compileInlineLevelRef1()
+                                 )
+                                 val iRef        = c.name
+                                 opc match {
+                                    
+                                    case "PUTSTATIC" =>
+                                       val assigendRef = opdStackTopmostItem(i = 0)
+                                       s"${assigneeRef }.${iRef } = ${assigendRef } "
+                                       .popoffPrependedWithDef()
+
+                                    case "GETSTATIC" =>
+                                       s"${assigneeRef }.${iRef } "
+                                       .ldcPrependedWithDef()
+
+                                 }
+                                 
+                              // case YyLoadOrStore(typeStr, "LOAD") =>
+                              //    opdState0.storage.apply(c.`var` )
+                              //    .toSingleWordNameString()
+                              //    .prependedAll(s"/* $opcodeName ${c.`var` } */ ")
+                              //    .ldcPrependedWithDef()
+
+                           }
+                           
+                        case c: asm.tree.VarInsnNode =>
+                           opcodeName match {
+
+                              case YyLoadOrStore(typeStr, "STORE") =>
+                                 // TODO
+                                 yStorePrependedWithDef(locI = {
+                                    c.`var`
+                                 })
+                                 
+                              case YyLoadOrStore(typeStr, "LOAD") =>
+                                 opdState0.storage.apply(c.`var` )
+                                 .toSingleWordNameString()
+                                 .prependedAll(s"/* $opcodeName ${c.`var` } */ ")
+                                 .ldcPrependedWithDef()
+
+                           }
+                           
                         case c: asm.tree.LdcInsnNode =>
                            import c.cst
                            s"ldc ${cst.getClass().getSimpleName() }(${cst })"
                            .ldcPrependedWithDef()
 
-                        // case c: asm.tree.LabelNode =>
-                        //    s"/* label: ${c.getLabel() } ; */"
-                        //    .appendedAll(" ")
-                        //    .appendedAll(summon[InOpdCtx].formatStackOperandRelative( ) )
-                        // case c: asm.tree.FrameNode =>
-                        //    opcodeName match {
-                        //       case "F_NEW" | "F_FULL" =>
-                        //          Seq(
-                        //             s"/* new frame: L ${c.local } */ " ,
-                        //             s"/*            S ${c.stack } */ " ,
-                        //          ).mkString("\n")
-                        //       case _ =>
-                        //          s"/* frame chg ${opcodeName }(......) */ "
-                        //    }
-                        // case c: asm.tree.LineNumberNode =>
-                        //    val lineNumber = c.line
-                        //    val srcFileName = summon[Sdc].srcFileName
-                        //    val ls = {
-                        //       "" + srcFileName + ":" + lineNumber
-                        //    }
-                        //    s"/* line ${ls } */"
+                        case c: asm.tree.LabelNode =>
+                           s"/* label: ${c.getLabel() } ; */"
+                           .fixedOpdStackOp()
+
+                        case c: asm.tree.FrameNode =>
+                           opcodeName match {
+                              case "F_NEW" | "F_FULL" =>
+                                 Seq(
+                                    s"/* new frame: L ${c.local } */ " ,
+                                    s"/*            S ${c.stack } */ " ,
+                                 ).mkString("\n")
+                                 .fixedOpdStackOp()
+                              case _ =>
+                                 s"/* frame chg ${opcodeName }(......) */ "
+                                 .fixedOpdStackOp()
+                           }
+
+                        case c: asm.tree.LineNumberNode =>
+                           val lineNumber = c.line
+                           val srcFileName = summon[Sdc].srcFileName
+                           val ls = {
+                              "" + srcFileName + ":" + lineNumber
+                           }
+                           s"/* line ${ls } */"
+                           .fixedOpdStackOp()
 
                         case c =>
                            s"(opcode ${opcodeName })(.........)"
