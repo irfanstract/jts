@@ -171,6 +171,8 @@ class wsnImplCtx1() {
                   import cbsq.meta.asm.jvm.opcodeNameTable
                   val InvokeYyy  = "INVOKE(\\w+)".r
                   val YyConstYyy = "(\\w)CONST_(\\w+)".r
+                  val YyLoadOrStore = "(\\w)(LOAD|STORE)".r
+                  val YyArrayLoadOrStore = "(\\w)A(LOAD|STORE)".r
                   extension (opcodeName: String) {
 
                      def ldcTConstOpcodeNamePrependedWithDef(): Jblt.OfStorageType[FqnStronumericPair[?] ] = {
