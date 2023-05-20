@@ -269,7 +269,7 @@ def wsnImpl() = {
                      // TODO
                      opdStack = (
                         JbltOpdStackState.byFromLeftRightwards((
-                           IndexedSeq.tabulate((3))(i => ("lclv", i) )
+                           IndexedSeq()
                         ))
                      ) ,
                      storage = IndexedSeq.empty ,
