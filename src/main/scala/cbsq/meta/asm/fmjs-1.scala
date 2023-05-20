@@ -368,6 +368,31 @@ def wsnImpl() = {
                   if instr.isInstanceOf[asm.tree.LabelNode] then {
                      o.println()
                   }
+                  if (instrOrdinal % 10) == 0 then {
+                     o println s"    /* stored: ${opdState.storage.toString() } */"
+                  }
+                  if (
+                     false
+                     // || (instrOrdinal % 10) == 0
+                     // || {
+                     //    import cbsq.meta.asm.jvm.opcodeNameTable
+                     //    opcodeNameTable(instr.getOpcode() ) match {
+                     //       case s =>
+                     //          "LOAD|DUP|CONST|LDC|GET|INVOKE|PUT|STORE".r
+                     //          .findAllIn(s)
+                     //          .nonEmpty
+                     //    }
+                     // }
+                     || (
+                        summon[PartialFunction[asm.tree.AbstractInsnNode, Unit]](using {
+                           case _ : asm.tree.MethodInsnNode =>
+                           case _ : asm.tree.InvokeDynamicInsnNode =>
+
+                        }) isDefinedAt instr 
+                     )
+                  ) then {
+                     o println s"    /* hot-st: ${opdState.opdStack.fromLeftRightwards.toString() } */"
+                  }
                   val instrOutcomeAnalysed = {
                      instr.toJsBlockLevelStmt(opdState0 = opdState )
                   }
