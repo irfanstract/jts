@@ -70,8 +70,6 @@ val ciw = wsnImplCtx1()
 
 val mockupOpc = {
    new InOpdCtx {
-         val operandStackPrefix      : String = "lval$2"
-         val returnValueStackPrefix  : String = "lval$3"
    }
 }
 
