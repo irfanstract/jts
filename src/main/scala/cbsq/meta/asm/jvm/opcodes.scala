@@ -20,15 +20,25 @@ val asmOpcodesConstsTable = {
    import scala.language.unsafeNulls
    import org.objectweb.asm
    import scala.jdk.CollectionConverters.*
-   classOf[asm.Opcodes]
-   .getFields()
-   .toIndexedSeq
-   .filter(m => {
-      import java.lang.reflect.Modifier
-      val modifiers = m.getModifiers()
-      Modifier.isStatic(modifiers) && Modifier.isPublic(modifiers ) && Modifier.isFinal(modifiers )
-   })
-   .map(c => (c.getName(), c.get(null).asInstanceOf[java.lang.Number].intValue() ) )
+   ({
+      this.getClass()
+      .getResource("/jvmsdocs/opcodes-table-asm.txt")
+   }) match {
+      case s0 =>
+         import java.io.*
+         val s = new StringWriter
+         new InputStreamReader(s0.openStream() )
+         .transferTo(s)
+         s.toString()
+   } match {
+      case s =>
+         "int\\s+(\\w+)\\s*\\=\\s*(\\d+)".r
+         .findAllMatchIn(s)
+         .map(s => (
+            (s group 1, BigInt(s group 2).toInt )
+         ))
+         .toIndexedSeq
+   }
 }
 
 protected 

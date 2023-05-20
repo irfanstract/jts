@@ -253,8 +253,13 @@ def wsnImpl() = {
                         .replaceAll(quote("<index>"), ((instrOrdinal).toString().reverse.padTo(3, '0').reverse) )
                }
                o println s"    /* "
-               o println s"     * the operand-stack states shall be const `$operandsFmt`s ;"
-               o println s"     * those const(s) should be written in a way them statically-analysable ;"
+               o println s"     * "
+               o println s"     * J2JS detail : "
+               o println s"     * when(ever) an opcode produces return-value, "
+               o println s"     * a fresh `const` will be assigned to reference the return-value. "
+               o println s"     * the name of the newly-introduced `const` "
+               o println s"     * will be tracked on *the hot-stack* and, possibly, *the store* "
+               o println s"     * "
                o println s"     */"
                val initialStackState = ({
                   import cbsq.meta.asm.jvm.FqnStronumericPair
@@ -276,16 +281,22 @@ def wsnImpl() = {
                   val stackAtOpcodeZero = operandsForIndex(0) + "$stack"
                   o println s"    const ${stackAtOpcodeZero } = args "
                })
-               for ((instr, instrOrdinal) <- (code.nn : asm.tree.MethodNode).instructions.asScala.zipWithIndex ) {
+               for (((instr, instrOrdinal), opdState) <- ({
+                  import cbsq.meta.asm.jvm.FqnStronumericPair
+                  import cbsq.meta.asm.jvmc.Jblt
+
+                  (code.nn : asm.tree.MethodNode)
+                  .instructions
+                  .asScala
+                  .toSeq
+                  .zipWithIndex
+                  .unfolding[Jblt.OpdState[FqnStronumericPair[?] ] ]((
+                     initialStackState
+                     
+                  ))({ case (opdState, (instr, instrOrdinal) ) => {
+                  ;
+                  
                   given cbsq.meta.asm.jvmc.InOpdCtx with {
-                     override
-                     val operandStackPrefix: String = {
-                        operandsForIndex(instrOrdinal)
-                     }
-                     override
-                     val returnValueStackPrefix: String = {
-                        operandsForIndex(instrOrdinal + 1)
-                     }
                   }
                   /**
                    * a *label* might indicate possibly-large linebreak and
@@ -294,20 +305,19 @@ def wsnImpl() = {
                   if instr.isInstanceOf[asm.tree.LabelNode] then {
                      o.println()
                   }
-                  val instrS = {
-                     instr.toJsBlockLevelStmt()
-                     .replaceFirst({
-                        import util.matching.Regex.{quoteReplacement, quote}
-                        ";\\s*" + (quote("//") + "[\\S\\s]*?" ).prependedAll("(?:").++(")").++("??") + "\\z"
-                     }, "")
-                     // .appendedAll(" ;")
-                     // .prependedAll("\n")
-                     // .prependedAll({
-                     //    "const " + (operandsForIndex(instrOrdinal) + "$im1") + " = " + (operandsForIndex(instrOrdinal + -1) + "$om1") + " ;"
-                     // } )
-                     // .replaceFirst("[\\S\\s]*", "{ $0 }")
+                  val instrOutcomeAnalysed = {
+                     instr.toJsBlockLevelStmt(opdState0 = opdState )
                   }
-                  o.println(s"${instrS.indent(2 * 2).dropRight(1) } ;" )
+                  import instrOutcomeAnalysed.resultingOpdState
+                  val instrS = {
+                     instrOutcomeAnalysed.transliteratedForm
+                  }
+                  o.println(s"${instrS.indent(2 * 2).dropRight(1) }" )
+                  
+                  // TODO
+                  resultingOpdState
+                  }})
+               }) ) {
                }
                o println "  }"
             }

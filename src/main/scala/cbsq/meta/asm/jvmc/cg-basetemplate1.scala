@@ -125,19 +125,16 @@ trait Sdc {
  * 
  */
 trait InOpdCtx {
-   val operandStackPrefix: String
-   val returnValueStackPrefix: String
-}
-
-extension (this1: InOpdCtx) {
-
-   def formatStackOperandRelative() = {
-      this1.operandStackPrefix + "$" + "stack"
-   }
-   def formatStackReturnRelative() = {
-      this1.returnValueStackPrefix + "$" + "stack"
-   }
    
+   extension (v: NonEmptyTuple ) {
+
+      def toSingleWordNameString(): String = {
+         v
+         .toList.mkString("$")
+      }
+      
+   }
+
 }
 
 export cbsq.meta.asm.jvm.FqnStronumericPair
@@ -310,21 +307,14 @@ class analyseMethodInvocOpcTranslitImpl(
    opc: MethodInvocOpcode,
    odst: MethodDescriptorImpl1,
    opdState0: Jblt.OpdState[FqnStronumericPair[?] ],
-) {
+)(using instropc: InOpdCtx) {
 
          // import scala.language.unsafeNulls
          import scala.jdk.CollectionConverters.*
          import org.objectweb.asm
          import cbsq.meta.asm.jvm.opcodeNameTable
 
-         extension (v: NonEmptyTuple ) {
-
-            def toSingleWordNameString(): String = {
-               v
-               .toList.mkString("$")
-            }
-            
-         }
+         export instropc.toSingleWordNameString
 
          val opcodeAnalysis = (
             analyseMethodInvocOpcImpl(MethodInvocOpcode.check(opc), odst)
@@ -357,13 +347,17 @@ class analyseMethodInvocOpcTranslitImpl(
             opdStackState0
             .poppedN(receiverCount + nonReceiverArity )
          }
+         require((
+            (receiverCount + nonReceiverArity )
+            <= vrs0.length
+         ), s"not enough on-stack items -- actual ${vrs0.length}, required $receiverCount + ${nonReceiverArity} ")
 
          val vrs = (
             vrs0
             .map(_.toSingleWordNameString() )
          )
 
-         val (receiverAlias +: nonReceiverArgsVarNames) = {
+         val (xra1 +: nonReceiverArgsVarNames) = {
             (vrs.take(receiverCount ).padTo(1, "undefined") ++ (
                vrs.drop(receiverCount )
             ) )
