@@ -226,6 +226,26 @@ object Jblt {
             .foldLeft[OpdState[OpdStackItem] ](e)((e, _) => e.afterPopoff )
          }
 
+         /**
+          * 
+          * after a `(W)STORE` (but not `(W)ASTORE`s !) opcode
+          * 
+          */
+         def afterYStoreOpc(destStorageIndex: Int) = {
+            val (hottestItem +: remainingHotStackItems) = {
+               e.opdStack.fromRightLeftwards
+            } : @unchecked
+            e.copy(
+               storage = {
+                  (e.storage :+ hottestItem)
+                  .updated[OpdStackItem](destStorageIndex, hottestItem)
+               } ,
+               opdStack = {
+                  JbltOpdStackState.byFromLeftRightwards(remainingHotStackItems)
+               } ,
+            )
+         }
+
       }
 
    }
