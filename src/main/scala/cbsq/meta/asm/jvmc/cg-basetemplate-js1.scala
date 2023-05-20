@@ -152,20 +152,150 @@ class wsnImplCtx1() {
       
       extension (instr: org.objectweb.asm.tree.AbstractInsnNode) {
 
-         def toJsBlockLevelStmt()(using InOpdCtx, Sdc): String = {
+         def toJsBlockLevelStmt(
+            opdState0: Jblt.OpdState[FqnStronumericPair[?] ] ,
+
+         )(using instropc : InOpdCtx)(using Sdc): Jblt.OfStorageType[FqnStronumericPair[?] ] = {
                   import scala.language.unsafeNulls
                   import scala.jdk.CollectionConverters.*
                   import org.objectweb.asm
+                  extension (st: Jblt.OpdState[FqnStronumericPair[?] ] ) {
+
+                     def newlyOpdOnstackPushedVarName: String = {
+                        st.opdStack
+                              .fromLeftRightwards.last
+                              .toSingleWordNameString()
+                     }
+
+                  }
                   import cbsq.meta.asm.jvm.opcodeNameTable
-                  val instrS = {
+                  val InvokeYyy  = "INVOKE(\\w+)".r
+                  val YyConstYyy = "(\\w)CONST_(\\w+)".r
+                  extension (opcodeName: String) {
+
+                     def ldcTConstOpcodeNamePrependedWithDef(): Jblt.OfStorageType[FqnStronumericPair[?] ] = {
+                     ;
+                     //
+                     val YyConstYyy(typeWord1, valStr) = opcodeName : @unchecked
+                     new Jblt {
+
+                        override
+                        val resultingOpdState: Jblt.OpdState[FqnStronumericPair[?] ] = {
+                           opdState0
+                           .afterLdcOpaque
+                        }
+   
+                        override
+                        val transliteratedForm = {
+                           val varName = (
+                              resultingOpdState
+                              .newlyOpdOnstackPushedVarName
+                           )
+                           s"const $varName = $valStr /* $opcodeName */ ; "
+                        }
+                        
+                     } : Jblt.OfStorageType[FqnStronumericPair[?] ]
+                     }
+                     
+                  }
+                  locally {
+                     import instropc.toSingleWordNameString
                      val opcodeName = (
                         opcodeNameTable.apply(instr.getOpcode())
                      )
+                     val unsupportedOpcodeFallbackCompiledCode = ({
+                        opcodeName match {
+                           
+                           case InvokeYyy(what1) if (what1 != "DYNAMIC") =>
+                              val c1 = instr.asInstanceOf[asm.tree.MethodInsnNode]
+                              import c1.{desc, name, owner}
+                              s"/* unsupported */ INVOKE_$what1(${owner}.${name}${desc}) ;"
+
+                           case YyConstYyy(typeWord1, valStr) =>
+                              s"/* unsupported */ CONST<${typeWord1 }> $valStr ;"
+
+                           case "INVOKEDYNAMIC" =>
+                              s"/* unsupported INVOKEDYNAMIC instr */ (.........) ;"
+
+                           case _ =>
+                              s"/* unsupported */ ${opcodeName }(.........) ;"
+
+                        }
+                     })
                      extension (f: String) {
-                        def prependedWithDef() = (
-                           f
-                           .prependedAll("const " + (summon[InOpdCtx].formatStackReturnRelative( ) ) + " = " )
+
+                        def unaryOpPrependedWithDef(): Jblt.OfStorageType[FqnStronumericPair[?] ] = ({
+                        new Jblt {
+
+                           override
+                           val resultingOpdState: Jblt.OpdState[FqnStronumericPair[?] ] = {
+                              opdState0
+                              .afterPopoff
+                              .afterLdcOpaque
+                           }
+      
+                           override
+                           val transliteratedForm = {
+                              val c = summon(using instr)
+                              val varName = (
+                                 resultingOpdState
+                                 .newlyOpdOnstackPushedVarName
+                              )
+                              // s"${opcodeName } ${c.name }${c.desc } "
+                              unsupportedOpcodeFallbackCompiledCode
+                           }
+                           
+                        } : Jblt.OfStorageType[FqnStronumericPair[?] ]
+                        })
+                        
+                     }
+                     extension (f: String) {
+
+                        def ldcPrependedWithDef(): Jblt.OfStorageType[FqnStronumericPair[?] ] = {
+                        new Jblt {
+
+                           override
+                           val resultingOpdState: Jblt.OpdState[FqnStronumericPair[?] ] = {
+                              opdState0
+                              .afterLdcOpaque
+                           }
+      
+                           override
+                           val transliteratedForm = {
+                              val c = summon(using instr)
+                              val varName = (
+                                 resultingOpdState
+                                 .newlyOpdOnstackPushedVarName
+                              )
+                              // s"${opcodeName } ${c.name }${c.desc } "
+                              s"const $varName = ($f ) ;"
+                           }
+                           
+                        } : Jblt.OfStorageType[FqnStronumericPair[?] ]
+                        }
+                        
+                     }
+                     extension (f: String) {
+
+                        def gotoPrependedWithDef(): Jblt.OfStorageType[FqnStronumericPair[?] ] = (
+                           // tbmt_???
+                           new Jblt {
+
+                              override
+                              val resultingOpdState: Jblt.OpdState[FqnStronumericPair[?] ] = {
+                                 opdState0
+                                 .copy(opdStack = JbltOpdStackState.empty )
+                              }
+         
+                              override
+                              val transliteratedForm = {
+                                 // TODO
+                                 s"goto /* what??? */ ;"
+                              }
+                              
+                           } : Jblt.OfStorageType[FqnStronumericPair[?] ]
                         )
+                        
                      }
                      instr match {
 
@@ -177,76 +307,78 @@ class wsnImplCtx1() {
                            )
                            opcodeName match
 
-                              case ReturnStmtOpName(what) =>
-                                 val dataTypeSimpleName = {
-                                    import cbsq.meta.asm.jvm.getOpcodeDataTypeCanonicalName
-                                    getOpcodeDataTypeCanonicalName(what)
-                                 }
-                                 s"return /* ${dataTypeSimpleName } */ (some value) "
+                              // case ReturnStmtOpName(what) =>
+                              //    val dataTypeSimpleName = {
+                              //       import cbsq.meta.asm.jvm.getOpcodeDataTypeCanonicalName
+                              //       getOpcodeDataTypeCanonicalName(what)
+                              //    }
+                              //    s"return /* ${dataTypeSimpleName } */ (some value) "
                                  
                               case VConstYOpName(typ @ ("I" | "L" | "F" | "D"), cvString) =>
-                                 // TODO
-                                 (summon[InOpdCtx].formatStackOperandRelative( ) )
-                                 .replaceFirst("[\\S\\s]*", "[VALUE, $0]".replace("VALUE", cvString ) )
-                                 .prependedWithDef()
-                                 .prependedAll(s"/* ${typ}CONST_${cvString } */" + "\n")
+                                 // // TODO
+                                 // (summon[InOpdCtx].formatStackOperandRelative( ) )
+                                 // .replaceFirst("[\\S\\s]*", "[VALUE, $0]".replace("VALUE", cvString ) )
+                                 // .ldcPrependedWithDef()
+                                 opcodeName.ldcTConstOpcodeNamePrependedWithDef()
 
                               case "ACONST_NULL" =>
-                                 // TODO
-                                 (summon[InOpdCtx].formatStackOperandRelative( ) )
-                                 .replaceFirst("[\\S\\s]*", "[VALUE, $0]".replace("VALUE", "null" ) )
-                                 .prependedWithDef()
+                                 // // TODO
+                                 // (summon[InOpdCtx].formatStackOperandRelative( ) )
+                                 // .replaceFirst("[\\S\\s]*", "[VALUE, $0]".replace("VALUE", "null" ) )
+                                 // .ldcPrependedWithDef()
+                                 opcodeName.ldcTConstOpcodeNamePrependedWithDef()
 
-                              case "NOP" | "NOOP" =>
-                                 (summon[InOpdCtx].formatStackOperandRelative( ) )
-                                 .appendedAll(" /* NOOP; no change in opd-stack */")
-                                 .prependedWithDef()
+                              // case "NOP" | "NOOP" =>
+                              //    (summon[InOpdCtx].formatStackOperandRelative( ) )
+                              //    .appendedAll(" /* NOOP; no change in opd-stack */")
+                              //    .ldcPrependedWithDef()
 
                               case _ =>
                                  s"${opcodeName }"
-                                 .prependedWithDef()
+                                 // .gotoPrependedWithDef()
+                                 .ldcPrependedWithDef()
                            
                         case c: asm.tree.MethodInsnNode =>
                            val cAsJvmDecom = s"${opcodeName } ${c.name }${c.desc } "
-                           c.toXJsString(documentOriginalSrc = false )
-                           .replaceFirst("[\\S\\s]*", "($0)")
-                           .prependedWithDef()
-                           .prependedAll(s"/* $cAsJvmDecom */" + "\n")
+                           c.toXJsString(
+                              opdState0 = opdState0,
+                              documentOriginalSrc = false ,
+                           )
                            
                         case c: asm.tree.LdcInsnNode =>
                            import c.cst
                            s"ldc ${cst.getClass().getSimpleName() }(${cst })"
-                           .prependedWithDef()
+                           .ldcPrependedWithDef()
 
-                        case c: asm.tree.LabelNode =>
-                           s"/* label: ${c.getLabel() } ; */"
-                           .appendedAll(" ")
-                           .appendedAll(summon[InOpdCtx].formatStackOperandRelative( ) )
-                        case c: asm.tree.FrameNode =>
-                           opcodeName match {
-                              case "F_NEW" | "F_FULL" =>
-                                 Seq(
-                                    s"/* new frame: L ${c.local } */ " ,
-                                    s"/*            S ${c.stack } */ " ,
-                                 ).mkString("\n")
-                              case _ =>
-                                 s"/* frame chg ${opcodeName }(......) */ "
-                           }
-                        case c: asm.tree.LineNumberNode =>
-                           val lineNumber = c.line
-                           val srcFileName = summon[Sdc].srcFileName
-                           val ls = {
-                              "" + srcFileName + ":" + lineNumber
-                           }
-                           s"/* line ${ls } */"
+                        // case c: asm.tree.LabelNode =>
+                        //    s"/* label: ${c.getLabel() } ; */"
+                        //    .appendedAll(" ")
+                        //    .appendedAll(summon[InOpdCtx].formatStackOperandRelative( ) )
+                        // case c: asm.tree.FrameNode =>
+                        //    opcodeName match {
+                        //       case "F_NEW" | "F_FULL" =>
+                        //          Seq(
+                        //             s"/* new frame: L ${c.local } */ " ,
+                        //             s"/*            S ${c.stack } */ " ,
+                        //          ).mkString("\n")
+                        //       case _ =>
+                        //          s"/* frame chg ${opcodeName }(......) */ "
+                        //    }
+                        // case c: asm.tree.LineNumberNode =>
+                        //    val lineNumber = c.line
+                        //    val srcFileName = summon[Sdc].srcFileName
+                        //    val ls = {
+                        //       "" + srcFileName + ":" + lineNumber
+                        //    }
+                        //    s"/* line ${ls } */"
 
                         case c =>
                            s"(opcode ${opcodeName })(.........)"
-                           .prependedWithDef()
+                           // .gotoPrependedWithDef()
+                           .ldcPrependedWithDef()
 
                      }
                   }
-                  instrS + " ;"
          }
 
       }
@@ -255,122 +387,58 @@ class wsnImplCtx1() {
 
          // TODO
          def toXJsString(
+            opdState0: Jblt.OpdState[FqnStronumericPair[?] ],
             documentOriginalSrc: Boolean = true ,
             useIife: Boolean = false ,
             async: Boolean = true ,
 
-         )(using InOpdCtx) : String = {
+         )(using InOpdCtx) : Jblt.OfStorageType[FqnStronumericPair[?] ] = {
             // s"${opcodeName } ${c.name }${c.desc } "
             ({
                // import scala.language.unsafeNulls
                import scala.jdk.CollectionConverters.*
                import org.objectweb.asm
                import cbsq.meta.asm.jvm.opcodeNameTable
+               val odst = ({
+                  NativeSigImpl(access = 0x0, name = c.name.nn, descriptor0 = {
+                     NativeSigImpl.Bds.apply(descriptor = c.desc.nn, signature0 = null )
+                  })
+               })
                // TODO
                c.getOpcode() match {
 
-                  case opc @ (asm.Opcodes.INVOKEVIRTUAL | asm.Opcodes.INVOKEINTERFACE | asm.Opcodes.INVOKESPECIAL | asm.Opcodes.INVOKESTATIC) =>
-                     val receiverCount = (
-                        opc match
-                           case asm.Opcodes.INVOKEVIRTUAL | asm.Opcodes.INVOKEINTERFACE =>
-                              1
-                           case asm.Opcodes.INVOKESPECIAL =>
-                              1
-                           case asm.Opcodes.INVOKESTATIC | asm.Opcodes.INVOKEDYNAMIC => 
-                              0
-                        
-                     ) : Int
-                     val odst = (
-                     NativeSigImpl(access = 0x0, name = c.name.nn, descriptor0 = {
-                        NativeSigImpl.Bds.apply(descriptor = c.desc.nn, signature0 = null )
-                     })
+                  case opc @ MethodInvocOpcode( ) =>
+                     toXJsString21(
+                        opc = opc ,
+                        rct = {
+                           asm.Type.getObjectType((
+                              Option(c.owner).getOrElse("java/lang/$$asmMethodInvocInstrNoOwner")
+                           ) ).nn
+                        } ,
+                        odst = odst ,
+                        opdState0 = opdState0 ,
+                        documentOriginalSrc = documentOriginalSrc ,
+                        async = async ,
                      )
-                     val argdsc = (
-                        asm.Type.getType(odst.descriptor).nn
-                     )
-                     val receiverAlias = (
-                        "ths1"
-                     )
-                     val nonReceiverArgsVarNames = (
-                        argdsc
-                        .getArgumentTypes().nn.toIndexedSeq
-                        .indices
-                        .map(i => s"arg$i")
-                     )
-                     val nonReceiverArgsSpread = (
-                        nonReceiverArgsVarNames
-                        .map(_ + ",").mkString
-                     )
-                     val nonReceiverArgsSpreadReversed = (
-                        nonReceiverArgsVarNames
-                        .reverse
-                        .map(_ + ",").mkString
-                     )
-                     (
-                        odst
-                        .toJsMethodName()
-                        .++(/* async */ (
-                           // TODO
-                           if async then "Asynchronously"
-                           else ""
-                        )).nn
-                        .++(s"($nonReceiverArgsSpread )")
-                        .prependedAll(".")
-                        .prependedAll(receiverAlias )
-                        .++((
-                           if documentOriginalSrc then s" /* $argdsc */"
-                           else ""
-                        ))
-                        .replaceFirst("[\\S\\s]*", /* async */ (
-                           if async then "await $0"
-                           else "$0"
-                        )).nn
-                        .replaceFirst("[\\S\\s]*", (
-                           "{ const returnVal = ($0) ; return [returnVal, ...unusedOpdStackValues] /* as const */ ; }"
-                        )).nn
-                     ) match
-                     case s =>
-                        import util.matching.Regex.{quote, quoteReplacement}
-                        val asw = (
-                           if async then "async"
-                           else ""
-                        )
-                        val awt = (
-                           if async then "await"
-                           else ""
-                        )
-                        if useIife then 
-                           s
-                           .replaceFirst("[\\S\\s]*", (
-                              receiverCount match {
-                                 case 0 => s"$asw ([${nonReceiverArgsSpreadReversed                } ...unusedOpdStackValues]) => " + "$0"
-                                 case 1 => s"$asw ([$nonReceiverArgsSpreadReversed $receiverAlias, ...unusedOpdStackValues]) => " + "$0"
-                              }
-                           )).nn
-                           .replaceFirst("[\\S\\s]*", (
-                              "($0 )" + quoteReplacement(s"(${summon[InOpdCtx ].formatStackOperandRelative( ) })")
-                           )).nn
-                           .replaceFirst("[\\S\\s]*", (
-                              s"$awt $$0"
-                           )).nn
-                        else {
-                           val stackRef = (
-                              summon[InOpdCtx ].formatStackOperandRelative( )
-                           )
-                           s
-                           .replaceFirst("[\\S\\s]*", ({
-                              receiverCount match {
-                                 case 0 => s"$awt ($asw () => { const [${nonReceiverArgsSpreadReversed                      } ...unusedOpdStackValues, ] = " + quoteReplacement(stackRef ) + " ; $0 } )()"
-                                 case 1 => s"$awt ($asw () => { const [${nonReceiverArgsSpreadReversed } ${receiverAlias }, ...unusedOpdStackValues, ] = " + quoteReplacement(stackRef ) + " ; $0 } )()"
-                              }
-                           })).nn
-                        }
-                     
 
                   case _ =>
                      import scala.language.unsafeNulls
                      val opcodeName = opcodeNameTable(c.getOpcode() )
-                     s"${opcodeName } ${c.name }${c.desc } "
+                     new Jblt {
+
+                        override
+                        val transliteratedForm = {
+                           // s"${opcodeName } ${c.name }${c.desc } "
+                           s"/* unsupported */ ${opcodeName } ${c.name }${c.desc } ;"
+                        }
+                        
+                        override
+                        val resultingOpdState: Jblt.OpdState[FqnStronumericPair[?] ] = {
+                           opdState0
+                        }
+   
+                     } : Jblt.OfStorageType[FqnStronumericPair[?] ]
+                     // ???
 
                }
             })
