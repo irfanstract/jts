@@ -36,6 +36,10 @@ object utilityImplicits {
             case (state0, presentlyItem +: remainingItems) =>
                val state1 = f(state0, presentlyItem)
                Some(((presentlyItem, state1): (E, Count), (state1, remainingItems)))
+
+            case (_, Seq() ) =>
+               None
+               
          })
          .to(s.iterableFactory )
          // ???
