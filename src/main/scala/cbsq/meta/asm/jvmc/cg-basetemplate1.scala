@@ -125,8 +125,20 @@ trait Sdc {
  * 
  */
 trait InOpdCtx {
+   
    val operandStackPrefix: String
+
    val returnValueStackPrefix: String
+
+   extension (v: NonEmptyTuple ) {
+
+      def toSingleWordNameString(): String = {
+         v
+         .toList.mkString("$")
+      }
+      
+   }
+
 }
 
 extension (this1: InOpdCtx) {
@@ -310,21 +322,14 @@ class analyseMethodInvocOpcTranslitImpl(
    opc: MethodInvocOpcode,
    odst: MethodDescriptorImpl1,
    opdState0: Jblt.OpdState[FqnStronumericPair[?] ],
-) {
+)(using instropc: InOpdCtx) {
 
          // import scala.language.unsafeNulls
          import scala.jdk.CollectionConverters.*
          import org.objectweb.asm
          import cbsq.meta.asm.jvm.opcodeNameTable
 
-         extension (v: NonEmptyTuple ) {
-
-            def toSingleWordNameString(): String = {
-               v
-               .toList.mkString("$")
-            }
-            
-         }
+         export instropc.toSingleWordNameString
 
          val opcodeAnalysis = (
             analyseMethodInvocOpcImpl(MethodInvocOpcode.check(opc), odst)
