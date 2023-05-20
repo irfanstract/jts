@@ -276,10 +276,73 @@ def wsnImpl() = {
                      lastItemgenState = ("lclv", 1) ,
                   )
                })
-               ({
-                  // import cbsq.meta.asm.jvmc.formatStackReturnRelative
-                  val stackAtOpcodeZero = operandsForIndex(0) + "$stack"
-                  o println s"    const ${stackAtOpcodeZero } = args "
+               val (
+                  postArgsPopulativeStackState ,
+                  
+               ) = ({
+                  import cbsq.meta.asm.jvm.FqnStronumericPair
+                  import cbsq.meta.asm.jvm.JbltOpdStackState
+                  import cbsq.meta.asm.jvmc.Jblt
+                  
+                  val nonReceiverArity = {
+                        import language.unsafeNulls
+                        import org.objectweb.asm
+
+                        asm.Type.getType(dsc10.descriptor )
+                        .getArgumentTypes().toIndexedSeq
+                        .length
+
+                  }
+
+                  val srcArgRefs = (
+                     Range(0, nonReceiverArity )
+                     .map(srcArgIndex => (
+                        s"args[$srcArgIndex]"
+                     ))
+                     .prependedAll[String]( Seq() :+ "this" )
+                  )
+                  assert(srcArgRefs.nonEmpty)
+
+                  val s1 = (
+                     srcArgRefs
+                     .foldLeft[Jblt.OpdState[FqnStronumericPair[?] ] ]((
+                        initialStackState
+
+                     ))((s0, _) => (
+                        s0
+                        .afterLdcOpaque
+                        .afterYStoreOpc(destStorageIndex = {
+                           s0.storage
+                           .length
+                        })
+                     ) )
+                  )
+
+                  for ((sName, srcArgRef) <- (
+                     s1.storage
+                     .zip(srcArgRefs)
+                     // .map(srcArgIndex => (
+                     //    s"args[${srcArgIndex }]"
+                     // ))
+                     
+                  ) ) {
+                     /**
+                      * dummy `InOpdCtx`
+                      * only for its `toSingleWordNameString`
+                      */
+                     given instropc : cbsq.meta.asm.jvmc.InOpdCtx with {
+                     }
+                     import instropc.toSingleWordNameString
+
+                     o println s"    const ${sName.toSingleWordNameString() } = $srcArgRef ; "
+
+                  }
+
+                  // assert(s1.storage.nonEmpty)
+                  (
+                     s1
+                     ,
+                  )
                })
                for (((instr, instrOrdinal), opdState) <- ({
                   import cbsq.meta.asm.jvm.FqnStronumericPair
@@ -291,7 +354,7 @@ def wsnImpl() = {
                   .toSeq
                   .zipWithIndex
                   .unfolding[Jblt.OpdState[FqnStronumericPair[?] ] ]((
-                     initialStackState
+                     postArgsPopulativeStackState
                      
                   ))({ case (opdState, (instr, instrOrdinal) ) => {
                   ;
