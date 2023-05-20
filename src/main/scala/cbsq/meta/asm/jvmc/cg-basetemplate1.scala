@@ -141,17 +141,6 @@ trait InOpdCtx {
 
 }
 
-extension (this1: InOpdCtx) {
-
-   def formatStackOperandRelative() = {
-      this1.operandStackPrefix + "$" + "stack"
-   }
-   def formatStackReturnRelative() = {
-      this1.returnValueStackPrefix + "$" + "stack"
-   }
-   
-}
-
 export cbsq.meta.asm.jvm.FqnStronumericPair
 
 export cbsq.meta.asm.jvm.JbltOpdStackState
