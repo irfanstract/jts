@@ -261,6 +261,35 @@ def wsnImpl() = {
                o println s"     * will be tracked on *the hot-stack* and, possibly, *the store* "
                o println s"     * "
                o println s"     */"
+
+               /**
+                * dummy `InOpdCtx`
+                * only for its `toSingleWordNameString`
+                */
+               given instropc : cbsq.meta.asm.jvmc.InOpdCtx with {
+               }
+               import instropc.toSingleWordNameString
+               extension(ls: collection.Iterable[cbsq.meta.asm.jvm.FqnStronumericPair[?] ]) {
+
+                  def toNameLsString(): String = {
+                     ls
+                     .map(_.toSingleWordNameString() )
+                     .map("" + _ + ", ").mkString("[" , "" , "]")
+                  }
+
+               }
+               
+               extension (opdState : cbsq.meta.asm.jvmc.Jblt.OpdState[cbsq.meta.asm.jvm.FqnStronumericPair[?] ]) {
+                  
+                  def printIStorageInfo(): Unit = {
+                     o println s"    /* stored: ${opdState.storage.toNameLsString() } */"
+                  }
+                  def printHotStackInfo(): Unit = {
+                     o println s"    /* hot-st: ${opdState.opdStack.fromLeftRightwards.toNameLsString() } */"
+                  }
+                  
+               }
+               
                val initialStackState = ({
                   import cbsq.meta.asm.jvm.FqnStronumericPair
                   import cbsq.meta.asm.jvm.JbltOpdStackState
@@ -326,13 +355,6 @@ def wsnImpl() = {
                      // ))
                      
                   ) ) {
-                     /**
-                      * dummy `InOpdCtx`
-                      * only for its `toSingleWordNameString`
-                      */
-                     given instropc : cbsq.meta.asm.jvmc.InOpdCtx with {
-                     }
-                     import instropc.toSingleWordNameString
 
                      o println s"    const ${sName.toSingleWordNameString() } = $srcArgRef ; "
 
@@ -368,8 +390,28 @@ def wsnImpl() = {
                   if instr.isInstanceOf[asm.tree.LabelNode] then {
                      o.println()
                   }
+                  if (
+                     false
+                     || ({
+                        import cbsq.meta.asm.jvm.opcodeNameTable
+                        opcodeNameTable(instr.getOpcode() ) match {
+
+                           case s =>
+                              "\\w(LOAD|STORE)".r
+                              .findAllIn(s)
+                              .nonEmpty
+
+                           case _ =>
+                              false
+                              
+                        }
+                     })
+                  ) then {
+                     opdState.printIStorageInfo()
+                     opdState.printHotStackInfo()
+                  }
                   if (instrOrdinal % 10) == 0 then {
-                     o println s"    /* stored: ${opdState.storage.toString() } */"
+                     opdState.printIStorageInfo()
                   }
                   if (
                      false
@@ -391,7 +433,7 @@ def wsnImpl() = {
                         }) isDefinedAt instr 
                      )
                   ) then {
-                     o println s"    /* hot-st: ${opdState.opdStack.fromLeftRightwards.toString() } */"
+                     opdState.printHotStackInfo()
                   }
                   val instrOutcomeAnalysed = {
                      instr.toJsBlockLevelStmt(opdState0 = opdState )
@@ -401,6 +443,29 @@ def wsnImpl() = {
                      instrOutcomeAnalysed.transliteratedForm
                   }
                   o.println(s"${instrS.indent(2 * 2).dropRight(1) }" )
+                  
+                  ({
+                     import cbsq.meta.asm.jvm.opcodeNameTable
+                     opcodeNameTable(instr.getOpcode() ) match {
+
+                     case s =>
+                        if (
+                           "\\w(LOAD|STORE)".r
+                           .findAllIn(s)
+                           .nonEmpty
+                        ) then {
+                           resultingOpdState.printHotStackInfo()
+                        }
+                        if (
+                           "\\w(STORE)".r
+                           .findAllIn(s)
+                           .nonEmpty
+                        ) then {
+                           resultingOpdState.printIStorageInfo()
+                        }
+
+                     }
+                  })
                   
                   // TODO
                   resultingOpdState

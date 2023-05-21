@@ -101,9 +101,23 @@ class wsnImplCtx1() {
        *
        */
       def rpkName(superName: ow.Type): String = {
-         superName
-         .getCanonicalName()
-         .prependedAll("rootPkg.")
+         import org.objectweb.asm
+         import asm.Type
+         superName.getSort() match {
+
+            case Type.OBJECT =>
+               superName
+               .getCanonicalName()
+               .prependedAll("rootPkg.")
+               
+            case Type.ARRAY =>
+               // TODO
+               s"(/* in Java was `${superName }` */ globalThis.Array )"
+               
+            case _ =>
+               throw IllegalArgumentException(s"unsupported sort : $superName")
+               
+         }
       }
 
       val canOmitPrivateMethods: Boolean = {
@@ -169,6 +183,10 @@ class wsnImplCtx1() {
 
                   }
                   import cbsq.meta.asm.jvm.opcodeNameTable
+                  val Y2Y  = "(\\w)2([A-Z])".r
+                  val YUnrOp  = "(\\w)(NEG)".r
+                  val YBiOp  = "(\\w)(ADD|MUL|SUB|DIV|SHL|SHR|USHR|CMP[LG][TE]?)".r
+                  val YCompToY  = "([A-Z])CMP([LG][TE]?)".r
                   val InvokeYyy  = "INVOKE(\\w+)".r
                   val YyConstYyy = "(\\w)CONST_(\\w+)".r
                   val YyLoadOrStore = "(\\w)(LOAD|STORE)".r
@@ -226,13 +244,13 @@ class wsnImplCtx1() {
                      })
                      extension (f: String) { /* pop-off */
 
-                        def popoffPrependedWithDef(): Jblt.OfStorageType[FqnStronumericPair[?] ] = ({
+                        def popoffPrependedWithDef(n: Int = 1): Jblt.OfStorageType[FqnStronumericPair[?] ] = ({
                         new Jblt {
 
                            override
                            val resultingOpdState: Jblt.OpdState[FqnStronumericPair[?] ] = {
-                              opdState0
-                              .afterPopoff
+                              Range(0, n)
+                              .foldLeft[Jblt.OpdState[FqnStronumericPair[?] ] ](opdState0)((s, i) => s.afterPopoff )
                            }
       
                            override
@@ -370,7 +388,7 @@ class wsnImplCtx1() {
                         .opdStack.
                         fromRightLeftwards(i)
                         .toSingleWordNameString()
-                        
+
                      } /* opdStackTopmostItem */
                      instr match {
 
@@ -389,12 +407,69 @@ class wsnImplCtx1() {
                               //    }
                               //    s"return /* ${dataTypeSimpleName } */ (some value) "
                                  
+                              case e @ ("POP" | "POP2") =>
+                                 val n = {
+                                    e match {
+                                       case "POP"    => 1
+                                       case "POP2"   => 2
+                                    }
+                                 }
+                                 s"/* $opcodeName */ (void 0)"
+                                 .popoffPrependedWithDef(n = n )
+
+                              case e @ (YBiOp(_*) | YUnrOp(_*)) =>
+                                 val (name, desc) = {
+                                    e match {
+
+                                    case YBiOp(type1, prd) =>
+                                       (
+                                          e ,
+                                          {
+                                             MethodDescriptorImpl1.Bds(descriptor = s"(${type1}${type1})Ljava/lang/Object;", signature0 = null )
+                                          } ,
+                                       )
+                                          
+                                    case YUnrOp(type1, prd) =>
+                                       (
+                                          e ,
+                                          {
+                                             MethodDescriptorImpl1.Bds(descriptor = s"(${type1})Ljava/lang/Object;", signature0 = null )
+                                          } ,
+                                       )
+                                          
+                                    }
+                                 } : (String, MethodDescriptorImpl1.Bds)
+                                 ({
+                                    import language.unsafeNulls
+                                    toXJsString21.apply(
+                                       // opdState0 = opdState0,
+                                       // documentOriginalSrc = false ,
+
+                                       opc = asm.Opcodes.INVOKESTATIC,
+                                       // async = false ,
+                                       rct = asm.Type.getObjectType("Ljava/lang/ICmpIntrinsics;") ,
+                                       odst = (
+                                          MethodDescriptorImpl1(access = 0x0, name = e, descriptor0 = desc)
+                                       ) ,
+                                       opdState0 = opdState0 ,
+
+                                       async = false ,
+                                       
+                                       documentOriginalSrc = false ,
+                                       
+                                    )
+                                 })
+
                               case YyArrayLoadOrStore(typeStr, "STORE") =>
                                  val assigneeRef = opdStackTopmostItem(i = 2)
                                  val iRef        = opdStackTopmostItem(i = 1)
                                  val assigendRef = opdStackTopmostItem(i = 0)
                                  (s"$assigneeRef[$iRef] = $assigendRef " )
                                  .popoffPrependedWithDef()
+
+                              case "ATHROW" =>
+                                 s"/* $opcodeName */ (() => { throw ${opdStackTopmostItem(i = 0) } ; })()"
+                                 .gotoPrependedWithDef()
 
                               case "DUP" =>
                                  opdStackTopmostItem(i = 0)
@@ -414,13 +489,31 @@ class wsnImplCtx1() {
                                  // .ldcPrependedWithDef()
                                  opcodeName.ldcTConstOpcodeNamePrependedWithDef()
 
-                              // case "NOP" | "NOOP" =>
-                              //    (summon[InOpdCtx].formatStackOperandRelative( ) )
-                              //    .appendedAll(" /* NOOP; no change in opd-stack */")
-                              //    .ldcPrependedWithDef()
+                              case Y2Y(srcType, destType) =>
+                                 val operandRef = opdStackTopmostItem(i = 0)
+                                 val oc = {
+                                    (srcType, destType) match {
+
+                                       case ("L", "F") =>
+                                          s"/* $opcodeName ; possible loss in precision */ $operandRef"
+                                       
+                                       case ("I" | "F", "D") =>
+                                          s"/* $opcodeName ; no loss in precision */ $operandRef"
+                                       
+                                       case _ =>
+                                          s"/* $opcodeName */ CB_$opcodeName($operandRef)"
+                                       
+                                    }
+                                 }
+                                 s"/* $opcodeName */ ($oc ) "
+                                 .unaryOpPrependedWithDef()
+
+                              case "NOP" | "NOOP" =>
+                                 s"/* $opcodeName */ (void 0)"
+                                 .fixedOpdStackOp()
 
                               case _ =>
-                                 s"${opcodeName }"
+                                 s"(unsupported ${opcodeName })"
                                  // .gotoPrependedWithDef()
                                  .ldcPrependedWithDef()
                            
@@ -452,7 +545,7 @@ class wsnImplCtx1() {
                                  .ldcPrependedWithDef()
                                  
                               case _ =>
-                                 s"${opcodeName }"
+                                 s"(unsupported ${opcodeName } ${c.desc })"
                                  // .gotoPrependedWithDef()
                                  .ldcPrependedWithDef()
                            
@@ -554,6 +647,11 @@ class wsnImplCtx1() {
                            }
                            s"/* line ${ls } */"
                            .fixedOpdStackOp()
+
+                        case c: asm.tree.JumpInsnNode =>
+                           s"(/* jump-instructions are not supported */ ; run_opcode_${opcodeName }() )"
+                           // .gotoPrependedWithDef()
+                           .ldcPrependedWithDef()
 
                         case c =>
                            s"(opcode ${opcodeName })(.........)"
