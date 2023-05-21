@@ -294,6 +294,11 @@ class wsnImplCtx1() {
                         override
                         val resultingOpdState: Jblt.OpdState[FqnStronumericPair[?] ] = {
                            lv
+                           /**
+                            * 
+                            * `OpdState.prototype.afterYStoreOpc` will simply use the existing name 
+                            * 
+                            */
                            .afterYStoreOpc(destStorageIndex = locI )
                         }
    
