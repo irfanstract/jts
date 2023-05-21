@@ -239,6 +239,7 @@ class wsnImplCtx1() {
                      
                   }
                   locally {
+                     import instropc.disallowsBackwardsJump
                      import instropc.toSingleWordNameString
                      val opcodeName = (
                         opcodeNameTable.apply(instr.getOpcode())
