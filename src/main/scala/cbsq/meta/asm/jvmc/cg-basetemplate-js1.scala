@@ -188,6 +188,21 @@ class wsnImplCtx1(
       def tbmt_??? =
          throw NotImplementedError()
       
+      object XOpcodeName {
+         
+               val YReturnOrThrow = "(\\w)(RETURN|THROW)".r
+               
+               val Y2Y  = "(\\w)2([A-Z])".r
+               val YUnrOp  = "(\\w)(NEG)".r
+               val YBiOp  = "(\\w)(ADD|MUL|SUB|DIV|SHL|SHR|USHR|CMP[LG][TE]?)".r
+               val YCompToY  = "([A-Z])CMP([LG][TE]?)".r
+               val InvokeYyy  = "INVOKE(\\w+)".r
+               val YyConstYyy = "(\\w)CONST_(\\w+)".r
+               val YyLoadOrStore = "(\\w)(LOAD|STORE)".r
+               val YyArrayLoadOrStore = "(\\w)A(LOAD|STORE)".r
+               
+      }
+
       extension (instr: org.objectweb.asm.tree.AbstractInsnNode) {
 
          def toJsBlockLevelStmt(
@@ -207,15 +222,7 @@ class wsnImplCtx1(
 
                   }
                   import cbsq.meta.asm.jvm.opcodeNameTable
-                  val YReturnOrThrow = "(\\w)(RETURN|THROW)".r
-                  val Y2Y  = "(\\w)2([A-Z])".r
-                  val YUnrOp  = "(\\w)(NEG)".r
-                  val YBiOp  = "(\\w)(ADD|MUL|SUB|DIV|SHL|SHR|USHR|CMP[LG][TE]?)".r
-                  val YCompToY  = "([A-Z])CMP([LG][TE]?)".r
-                  val InvokeYyy  = "INVOKE(\\w+)".r
-                  val YyConstYyy = "(\\w)CONST_(\\w+)".r
-                  val YyLoadOrStore = "(\\w)(LOAD|STORE)".r
-                  val YyArrayLoadOrStore = "(\\w)A(LOAD|STORE)".r
+                  import XOpcodeName.*
                   extension (opcodeName: String) {
 
                      def ldcTConstOpcodeNamePrependedWithDef(): Jblt.OfStorageType[FqnStronumericPair[?] ] = {
