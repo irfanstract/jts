@@ -246,28 +246,6 @@ class wsnImplCtx1(
                   locally {
                      import instropc.disallowsBackwardsJump
                      import instropc.toSingleWordNameString
-                     val opcodeName = (
-                        opcodeNameTable.apply(instr.getOpcode())
-                     )
-                     val unsupportedOpcodeFallbackCompiledCode = ({
-                        opcodeName match {
-                           
-                           case InvokeYyy(what1) if (what1 != "DYNAMIC") =>
-                              val c1 = instr.asInstanceOf[asm.tree.MethodInsnNode]
-                              import c1.{desc, name, owner}
-                              s"/* unsupported */ INVOKE_$what1(${owner}.${name}${desc}) ;"
-
-                           case YyConstYyy(typeWord1, valStr) =>
-                              s"/* unsupported */ CONST<${typeWord1 }> $valStr ;"
-
-                           case "INVOKEDYNAMIC" =>
-                              s"/* unsupported INVOKEDYNAMIC instr */ (.........) ;"
-
-                           case _ =>
-                              s"/* unsupported */ ${opcodeName }(.........) ;"
-
-                        }
-                     })
                      extension (f: String) { /* pop-off */
 
                         def popoffPrependedWithDef(n: Int = 1): Jblt.OfStorageType[FqnStronumericPair[?] ] = ({
@@ -412,7 +390,7 @@ class wsnImplCtx1(
       
                            override
                            val transliteratedForm = {
-                              val c = summon(using instr)
+                              // val c = summon(using instr)
                               val varName = (
                                  resultingOpdState
                                  .newlyOpdOnstackPushedVarName
@@ -439,7 +417,7 @@ class wsnImplCtx1(
       
                            override
                            val transliteratedForm = {
-                              val c = summon(using instr)
+                              // val c = summon(using instr)
                               val varName = (
                                  resultingOpdState
                                  .newlyOpdOnstackPushedVarName
@@ -527,6 +505,28 @@ class wsnImplCtx1(
                         .toSingleWordNameString()
 
                      } /* opdStackTopmostItem */
+                     val opcodeName = (
+                        opcodeNameTable.apply(instr.getOpcode())
+                     )
+                     val unsupportedOpcodeFallbackCompiledCode = ({
+                        opcodeName match {
+                           
+                           case InvokeYyy(what1) if (what1 != "DYNAMIC") =>
+                              val c1 = instr.asInstanceOf[asm.tree.MethodInsnNode]
+                              import c1.{desc, name, owner}
+                              s"/* unsupported */ INVOKE_$what1(${owner}.${name}${desc}) ;"
+
+                           case YyConstYyy(typeWord1, valStr) =>
+                              s"/* unsupported */ CONST<${typeWord1 }> $valStr ;"
+
+                           case "INVOKEDYNAMIC" =>
+                              s"/* unsupported INVOKEDYNAMIC instr */ (.........) ;"
+
+                           case _ =>
+                              s"/* unsupported */ ${opcodeName }(.........) ;"
+
+                        }
+                     })
                      instr match {
 
                         case c: asm.tree.InsnNode =>
