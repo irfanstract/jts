@@ -33,6 +33,7 @@ extension (o: java.io.PrintWriter) {
                   hideableMethodsEffectively
                   .map(e => e.name)
                   .map(_.length())
+                  .++[Int](Seq(16 ) )
                   .max
                )
                for (m <- hideableMethodsEffectively) {
