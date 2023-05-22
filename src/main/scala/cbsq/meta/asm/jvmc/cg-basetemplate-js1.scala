@@ -43,6 +43,7 @@ extension (o: java.io.PrintWriter) {
                   )
                   o.println(s"   * - ${m.name.padTo(maxNameChars + 1, ' ') }$mFullSigExcludingName ")
                }
+               o.println(s"   * - (that's it) ")
             })
             o.println(s"   * ")
             o.println(s"   */")
