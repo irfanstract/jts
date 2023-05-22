@@ -143,7 +143,7 @@ class wsnImplCtx1(
       }
 
       val canOmitPrivateMethods: Boolean = {
-         true
+         generatedJsConfig.isForTypeDeclarationFile
       }
 
       def getBaseTemplate() = {
