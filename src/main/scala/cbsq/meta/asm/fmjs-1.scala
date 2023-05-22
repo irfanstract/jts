@@ -357,8 +357,27 @@ def wsnImpl(
                   )
                   // assert(srcArgRefs.nonEmpty)
 
-                  val s1 = (
+                  /**
+                   * 
+                   * the initial-value expr(s) for the local(s), in-order
+                   * 
+                   * needs to be padded to `maxLocals`,
+                   * due to the handling of `goto`s
+                   * 
+                   */
+                  val localsInitialisers = {
                      srcArgRefs
+                     
+                     .padTo(len = {
+                        (code : asm.tree.MethodNode).maxLocals
+                        // .`+`(2 )
+
+                     }, elem = "null" )
+                     
+                  }
+                  
+                  val s1 = (
+                     localsInitialisers
                      .foldLeft[Jblt.OpdState[FqnStronumericPair[?] ] ]((
                         initialStackState
 
@@ -374,14 +393,19 @@ def wsnImpl(
 
                   for ((sName, srcArgRef) <- (
                      s1.storage
-                     .zip(srcArgRefs)
+                     .zip(localsInitialisers)
                      // .map(srcArgIndex => (
                      //    s"args[${srcArgIndex }]"
                      // ))
                      
                   ) ) {
 
-                     o println s"    const ${sName.toSingleWordNameString() } = $srcArgRef ; "
+                     val keyw = (
+                        if srcArgRef matches "undefined|null|_|unini?tiali[sz]ed" then
+                           "let"
+                        else "const"
+                     )
+                     o println s"    $keyw ${sName.toSingleWordNameString() } = $srcArgRef ; "
 
                   }
 
