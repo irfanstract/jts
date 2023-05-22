@@ -26,8 +26,13 @@ export cbsq.meta.asm.jvmc.WsnPwEmitter
 
 export cbsq.meta.asm.jvmc.wsnImplCtx1
 
-def wsnImpl() = {
-   val wsni = wsnImplCtx1()
+def wsnImpl(
+   generatedJsConfig: cbsq.meta.asm.jsgen.TsConfig ,
+
+) = {
+   val wsni = {
+      wsnImplCtx1(generatedJsConfig = generatedJsConfig)
+   }
    import wsni.*
 
    sealed case class forConfig(
@@ -227,7 +232,10 @@ def wsnImpl() = {
                .replaceFirst("\\A\\s*", "  ")
                .replaceFirst(";\\s*\\z", "")
             }) )
-            if ({
+            if ((
+               (generatedJsConfig.isForTypeDeclarationFile == false)
+               
+            ) && {
                import scala.language.unsafeNulls
                import org.objectweb.asm
                import asm.Opcodes
@@ -261,6 +269,39 @@ def wsnImpl() = {
                o println s"     * will be tracked on *the hot-stack* and, possibly, *the store* "
                o println s"     * "
                o println s"     */"
+
+               /**
+                * dummy `InOpdCtx`
+                * only for its `toSingleWordNameString`
+                */
+               given instropc : cbsq.meta.asm.jvmc.InOpdCtx with {
+               }
+               import instropc.toSingleWordNameString
+               extension(ls: collection.Iterable[cbsq.meta.asm.jvm.FqnStronumericPair[?] ]) {
+
+                  def toNameLsString(): String = {
+                     ls
+                     .map(_.toSingleWordNameString() )
+                     .map("" + _ + ", ").mkString("[" , "" , "]")
+                  }
+
+               }
+               
+               extension (opdState : cbsq.meta.asm.jvmc.Jblt.OpdState[cbsq.meta.asm.jvm.FqnStronumericPair[?] ]) {
+                  
+                  def printIStorageAndHotStackInfo(): Unit = {
+                     o println s"    /* stored: ${opdState.storage.toNameLsString() } ; hot-st: ${opdState.opdStack.fromLeftRightwards.toNameLsString() } */"
+                  }
+                  
+                  def printIStorageInfo(): Unit = {
+                     o println s"    /* stored: ${opdState.storage.toNameLsString() } */"
+                  }
+                  def printHotStackInfo(): Unit = {
+                     o println s"    /* hot-st: ${opdState.opdStack.fromLeftRightwards.toNameLsString() } */"
+                  }
+                  
+               }
+               
                val initialStackState = ({
                   import cbsq.meta.asm.jvm.FqnStronumericPair
                   import cbsq.meta.asm.jvm.JbltOpdStackState
@@ -326,13 +367,6 @@ def wsnImpl() = {
                      // ))
                      
                   ) ) {
-                     /**
-                      * dummy `InOpdCtx`
-                      * only for its `toSingleWordNameString`
-                      */
-                     given instropc : cbsq.meta.asm.jvmc.InOpdCtx with {
-                     }
-                     import instropc.toSingleWordNameString
 
                      o println s"    const ${sName.toSingleWordNameString() } = $srcArgRef ; "
 
@@ -368,6 +402,50 @@ def wsnImpl() = {
                   if instr.isInstanceOf[asm.tree.LabelNode] then {
                      o.println()
                   }
+                  if (
+                     false
+                     || ({
+                        import cbsq.meta.asm.jvm.opcodeNameTable
+                        opcodeNameTable(instr.getOpcode() ) match {
+
+                           case s =>
+                              "\\w(LOAD|STORE)".r
+                              .findAllIn(s)
+                              .nonEmpty
+
+                           case _ =>
+                              false
+                              
+                        }
+                     })
+                  ) then {
+                     opdState.printIStorageAndHotStackInfo()
+                  }
+                  if (instrOrdinal % 10) == 0 then {
+                     opdState.printIStorageInfo()
+                  }
+                  if (
+                     false
+                     // || (instrOrdinal % 10) == 0
+                     // || {
+                     //    import cbsq.meta.asm.jvm.opcodeNameTable
+                     //    opcodeNameTable(instr.getOpcode() ) match {
+                     //       case s =>
+                     //          "LOAD|DUP|CONST|LDC|GET|INVOKE|PUT|STORE".r
+                     //          .findAllIn(s)
+                     //          .nonEmpty
+                     //    }
+                     // }
+                     || (
+                        summon[PartialFunction[asm.tree.AbstractInsnNode, Unit]](using {
+                           case _ : asm.tree.MethodInsnNode =>
+                           case _ : asm.tree.InvokeDynamicInsnNode =>
+
+                        }) isDefinedAt instr 
+                     )
+                  ) then {
+                     opdState.printHotStackInfo()
+                  }
                   val instrOutcomeAnalysed = {
                      instr.toJsBlockLevelStmt(opdState0 = opdState )
                   }
@@ -376,6 +454,37 @@ def wsnImpl() = {
                      instrOutcomeAnalysed.transliteratedForm
                   }
                   o.println(s"${instrS.indent(2 * 2).dropRight(1) }" )
+                  
+                  ({
+                     import cbsq.meta.asm.jvm.opcodeNameTable
+                     opcodeNameTable(instr.getOpcode() ) match {
+
+                     case s =>
+                        if (
+                           "\\w(LOAD|STORE)".r
+                           .findAllIn(s)
+                           .nonEmpty
+                        ) then {
+                           resultingOpdState.printIStorageAndHotStackInfo()
+                        }
+                        if (
+                           "\\w(STORE)".r
+                           .findAllIn(s)
+                           .nonEmpty
+                        ) then {
+                           /* unified above */
+                        }
+                        
+                        if (
+                           "\\A(?:INVOKE|POP\\d*|\\wCONST|LDC|DUP)".r
+                           .findAllIn(s)
+                           .nonEmpty
+                        ) then {
+                           resultingOpdState.printHotStackInfo()
+                        } /* if "\\A(?:INVOKE|POP\\d*|\\wCONST|LDC|DUP)".r matches */
+
+                     }
+                  })
                   
                   // TODO
                   resultingOpdState

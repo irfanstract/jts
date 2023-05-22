@@ -126,6 +126,17 @@ trait Sdc {
  */
 trait InOpdCtx {
    
+   /**
+    * 
+    * combination between *backwards-jump* and *overwrites to the store*
+    * means that we can't limit to `const`s, we'd have to switch it/them to `let`s
+    * 
+    */
+   lazy
+   val disallowsBackwardsJump: Boolean = {
+      false
+   }
+
    extension (v: NonEmptyTuple ) {
 
       def toSingleWordNameString(): String = {
