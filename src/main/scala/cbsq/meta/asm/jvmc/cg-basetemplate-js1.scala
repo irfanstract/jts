@@ -841,6 +841,17 @@ class wsnImplCtx1(
                                  })
                                  
                               case YyLoadOrStore(typeStr, "LOAD") =>
+                                 /**
+                                  * 
+                                  * since
+                                  * the "var" backing each *store* (ObjectWeb calls them "locals")
+                                  * would be `let`s,
+                                  * it's unwise to simply push the name into `opdStack` as
+                                  * the `let` could subsequently be re-assigned ;
+                                  * we'll
+                                  * need to allocate another "var" (this time a `const`) to store *the store's presently-value*
+                                  * 
+                                  */
                                  opdState0.storage.apply(c.`var` )
                                  .toSingleWordNameString()
                                  .prependedAll(s"/* $opcodeName ${c.`var` } */ ")
