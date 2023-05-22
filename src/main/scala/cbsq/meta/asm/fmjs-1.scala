@@ -335,14 +335,27 @@ def wsnImpl(
 
                   }
 
+                  /**
+                   * 
+                   * the args, including conditional `this`
+                   * 
+                   */
                   val srcArgRefs = (
                      Range(0, nonReceiverArity )
                      .map(srcArgIndex => (
                         s"args[$srcArgIndex]"
                      ))
-                     .prependedAll[String]( Seq() :+ "this" )
+                     .prependedAll[String]({
+                        import asm.Opcodes
+                        if (
+                           (Opcodes.ACC_STATIC & (code : asm.tree.MethodNode).access )
+                           == 0
+                        ) then
+                           Seq.empty :+ "this"
+                        else Seq.empty
+                     })
                   )
-                  assert(srcArgRefs.nonEmpty)
+                  // assert(srcArgRefs.nonEmpty)
 
                   val s1 = (
                      srcArgRefs
