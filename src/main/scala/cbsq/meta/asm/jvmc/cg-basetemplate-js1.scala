@@ -54,7 +54,7 @@ extension (o: java.io.PrintWriter) {
 
 
 class wsnImplCtx1(
-   val generatedJsConfig: cbsq.meta.asm.jsgen.TsConfig ,
+   generatedJsConfig: cbsq.meta.asm.jsgen.TsConfig ,
 
 ) {
    object eRpkImpl extends
