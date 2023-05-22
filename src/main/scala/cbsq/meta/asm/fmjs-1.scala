@@ -232,7 +232,10 @@ def wsnImpl(
                .replaceFirst("\\A\\s*", "  ")
                .replaceFirst(";\\s*\\z", "")
             }) )
-            if ({
+            if ((
+               (generatedJsConfig.isForTypeDeclarationFile == false)
+               
+            ) && {
                import scala.language.unsafeNulls
                import org.objectweb.asm
                import asm.Opcodes
