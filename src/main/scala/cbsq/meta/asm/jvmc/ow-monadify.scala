@@ -105,7 +105,7 @@ export cbsq.meta.asm.jsgen.TsConfig
 @deprecated
 given defaultTsConfig : TsConfig with {
 
-   final val isForTypeDeclarationFile = true
+   final val isForTypeDeclarationFile = false
 
 }
 

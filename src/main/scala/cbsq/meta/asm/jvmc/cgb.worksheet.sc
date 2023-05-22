@@ -45,6 +45,18 @@ s22
 .afterPopoff
 .afterLdcOpaque
 
+(util.Try {
+   s22
+   .storage
+   .updated(index = 3, elem = ("lclval", 21) )
+} )
+.failed
+.get
+"it threw an " + (
+   classOf[IndexOutOfBoundsException]
+   .getSimpleName().nn
+)
+
 
 
 

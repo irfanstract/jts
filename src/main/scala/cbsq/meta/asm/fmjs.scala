@@ -18,12 +18,12 @@ package cbsq.meta.asm
 
 
 
-def fcv(o: java.io.PrintWriter) : ow.ClassVisitor = {
+def fcv(o: java.io.PrintWriter)(using cbsq.meta.asm.jsgen.TsConfig) : ow.ClassVisitor = {
    import org.objectweb.asm
    new asm.ClassVisitor(asm.Opcodes.ASM9) {
 
       var s : Wsn = (
-         wsnImpl( )
+         wsnImpl(generatedJsConfig = summon[cbsq.meta.asm.jsgen.TsConfig] )
       )
       
       override
@@ -100,7 +100,8 @@ def fcvDemo101(): Unit = {
       getClass()
       // .getResource("/jbc-transform/samples/byteManipImplicits$.class")
       // .getResource("/jbc-transform/samples/bytebuffers1$package$ByteBlob$.class").nn
-      .getResource("/jbc-transform/samples/IOMR$MarkableInputStreamImpl.class").nn
+      // .getResource("/jbc-transform/samples/IOMR$MarkableInputStreamImpl.class").nn
+      .getResource("/jbc-transform/samples/Looping1$.class").nn
    )
    val cr = (
       new org.objectweb.asm.ClassReader((
