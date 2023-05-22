@@ -203,15 +203,16 @@ class wsnImplCtx1(
                
       }
 
-      extension (instr: org.objectweb.asm.tree.AbstractInsnNode) {
-
-         def toJsBlockLevelStmt(
+      class analyseTjbStat1(
             opdState0: Jblt.OpdState[FqnStronumericPair[?] ] ,
 
-         )(using instropc : InOpdCtx)(using Sdc): Jblt.OfStorageType[FqnStronumericPair[?] ] = {
+      )(using instropc : InOpdCtx)(using Sdc)
+      {
+
                   import scala.language.unsafeNulls
                   import scala.jdk.CollectionConverters.*
                   import org.objectweb.asm
+                  
                   extension (st: Jblt.OpdState[FqnStronumericPair[?] ] ) {
 
                      def newlyOpdOnstackPushedVarName: String = {
@@ -221,8 +222,10 @@ class wsnImplCtx1(
                      }
 
                   }
-                  import cbsq.meta.asm.jvm.opcodeNameTable
-                  import XOpcodeName.*
+                  
+                  export cbsq.meta.asm.jvm.opcodeNameTable
+                  export XOpcodeName.*
+                  
                   extension (opcodeName: String) {
 
                      def ldcTConstOpcodeNamePrependedWithDef(): Jblt.OfStorageType[FqnStronumericPair[?] ] = {
@@ -250,6 +253,25 @@ class wsnImplCtx1(
                      }
                      
                   }
+         
+      }
+
+      extension (instr: org.objectweb.asm.tree.AbstractInsnNode) {
+
+         def toJsBlockLevelStmt(
+            opdState0: Jblt.OpdState[FqnStronumericPair[?] ] ,
+
+         )(using instropc : InOpdCtx)(using Sdc): Jblt.OfStorageType[FqnStronumericPair[?] ] = {
+                  import scala.language.unsafeNulls
+                  import scala.jdk.CollectionConverters.*
+                  import org.objectweb.asm
+                  val analysis1 = (
+                     analyseTjbStat1.apply(
+                        opdState0 = opdState0 ,
+                        
+                     )
+                  )
+                  import analysis1.*
 
                   import instropc.disallowsBackwardsJump
 
