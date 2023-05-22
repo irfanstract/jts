@@ -286,6 +286,10 @@ def wsnImpl(
                
                extension (opdState : cbsq.meta.asm.jvmc.Jblt.OpdState[cbsq.meta.asm.jvm.FqnStronumericPair[?] ]) {
                   
+                  def printIStorageAndHotStackInfo(): Unit = {
+                     o println s"    /* stored: ${opdState.storage.toNameLsString() } ; hot-st: ${opdState.opdStack.fromLeftRightwards.toNameLsString() } */"
+                  }
+                  
                   def printIStorageInfo(): Unit = {
                      o println s"    /* stored: ${opdState.storage.toNameLsString() } */"
                   }
@@ -412,8 +416,7 @@ def wsnImpl(
                         }
                      })
                   ) then {
-                     opdState.printIStorageInfo()
-                     opdState.printHotStackInfo()
+                     opdState.printIStorageAndHotStackInfo()
                   }
                   if (instrOrdinal % 10) == 0 then {
                      opdState.printIStorageInfo()
@@ -459,15 +462,23 @@ def wsnImpl(
                            .findAllIn(s)
                            .nonEmpty
                         ) then {
-                           resultingOpdState.printHotStackInfo()
+                           resultingOpdState.printIStorageAndHotStackInfo()
                         }
                         if (
                            "\\w(STORE)".r
                            .findAllIn(s)
                            .nonEmpty
                         ) then {
-                           resultingOpdState.printIStorageInfo()
+                           /* unified above */
                         }
+                        
+                        if (
+                           "\\A(?:INVOKE|POP\\d*|\\wCONST|LDC|DUP)".r
+                           .findAllIn(s)
+                           .nonEmpty
+                        ) then {
+                           resultingOpdState.printHotStackInfo()
+                        } /* if "\\A(?:INVOKE|POP\\d*|\\wCONST|LDC|DUP)".r matches */
 
                      }
                   })
