@@ -252,6 +252,16 @@ def wsnImpl(
                import org.objectweb.asm
                import cbsq.meta.asm.jvm.opcodeNameTable
                o println "  {"
+               if true then {
+                  o println s"    /* "
+                  o println s"     * "
+                  o println s"     * ${code.instructions.size() } instructions (including labels) "
+                  o println s"     * max store    : ${code.maxLocals } "
+                  o println s"     * max stack    : ${code.maxStack  } "
+                  o println s"     * "
+                  o println s"     */"
+               }
+
                val operandsFmt = {
                   "code$<index>$operands"
                }
