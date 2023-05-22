@@ -101,6 +101,7 @@ def fcvDemo101(): Unit = {
       // .getResource("/jbc-transform/samples/byteManipImplicits$.class")
       // .getResource("/jbc-transform/samples/bytebuffers1$package$ByteBlob$.class").nn
       .getResource("/jbc-transform/samples/IOMR$MarkableInputStreamImpl.class").nn
+      // .getResource("/jbc-transform/samples/Looping1$.class").nn
    )
    val cr = (
       new org.objectweb.asm.ClassReader((
