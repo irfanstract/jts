@@ -250,222 +250,252 @@ class wsnImplCtx1(
                      }
                      
                   }
-                  
-                  locally {
-                     import instropc.disallowsBackwardsJump
-                     import instropc.toSingleWordNameString
-                     extension (f: String) { /* pop-off */
 
-                        def popoffPrependedWithDef(n: Int = 1): Jblt.OfStorageType[FqnStronumericPair[?] ] = ({
-                        new Jblt {
+                  import instropc.disallowsBackwardsJump
 
-                           override
-                           val resultingOpdState: Jblt.OpdState[FqnStronumericPair[?] ] = {
-                              Range(0, n)
-                              .foldLeft[Jblt.OpdState[FqnStronumericPair[?] ] ](opdState0)((s, i) => s.afterPopoff )
-                           }
-      
-                           override
-                           val transliteratedForm = {
-                              // s"${opcodeName } ${c.name }${c.desc } "
-                              s"/* discarded */ $f ; "
-                           }
-                           
-                        } : Jblt.OfStorageType[FqnStronumericPair[?] ]
-                        })
-                        
-                     }
-                     def yStorePrependedWithDef(locI: Int): Jblt.OfStorageType[FqnStronumericPair[?] ] = {
-                     /**
-                      * 
-                      * per JVMS, 
-                      * in general, there's nothing to disallow re-assignment to *stores* ;
-                      * this means that *store-area vars* will need to be re-assignable, like `let`.
-                      * 
-                      * however, as 
-                      * *there'll have been declared the corresponding var/const (by previous calls to `toJsBlockLevelStmt`), and
-                      * the var/const will likely have been a `const`*,
-                      * we'll need to move to a distinctive name .
-                      * 
-                      */
-                     if (disallowsBackwardsJump) {
+                  import instropc.toSingleWordNameString
+
+                  extension (f: String) { /* pop-off */
+                     
+                     def popoffPrependedWithDef(n: Int = 1): Jblt.OfStorageType[FqnStronumericPair[?] ] = ({
                      new Jblt {
-
-                        val lv = {
-                           opdState0
-                           // .afterLdcOpaque
-                        }
-
+                        
                         override
                         val resultingOpdState: Jblt.OpdState[FqnStronumericPair[?] ] = {
-                           lv
-                           /**
-                            * 
-                            * `OpdState.prototype.afterYStoreOpc` will simply use the existing name 
-                            * 
-                            */
-                           .afterYStoreOpc(destStorageIndex = locI )
+                           Range(0, n)
+                           .foldLeft[Jblt.OpdState[FqnStronumericPair[?] ] ](opdState0)((s, i) => s.afterPopoff )
                         }
    
                         override
                         val transliteratedForm = {
-                           s"/* (?)STORE to $locI */ ;"
+                           // s"${opcodeName } ${c.name }${c.desc } "
+                           s"/* discarded */ $f ; "
                         }
                         
                      } : Jblt.OfStorageType[FqnStronumericPair[?] ]
-                     } /* end of the `true` case */
-                     else {
-                        new Jblt {
+                     })
+                     
+                  }
 
-                           /**
-                            * 
-                            * `opdState0` with expanded `storage` (to cover `locI`)
-                            * 
-                            */
-                           val opdState2 = {
-                              Iterator.iterate[Jblt.OpdState[FqnStronumericPair[?] ] ](opdState0 )({
-                                 case s =>
-                                    s
-                                    .afterLdcOpaque
-                                    /**
-                                     * 
-                                     * `OpdState.prototype.afterYStoreOpc` will simply use the existing name 
-                                     * 
-                                     */
-                                    .afterYStoreOpc(destStorageIndex = locI )
-                                    
-                              })
-                              .take(0x1000 ) /* avoid the CPU 100% issue */
-                              .find(s => {
-                                 s.storage
-                                 .isDefinedAt(locI ) /* a `PartialFunction` method as implemented in `Seq` */
-                              })
-                              .getOrElse(throw IndexOutOfBoundsException(s"unexpected hang" ) )
-                           }
-
-                           override
-                           val resultingOpdState: Jblt.OpdState[FqnStronumericPair[?] ] = {
-                              opdState2
-                              .copy(opdStack = {
-                                 opdState0
-                                 .afterPopoff
-                                 .opdStack
-                              })
-                           }
-
-                           /**
-                            * 
-                            */
-                           val actualValueVarName = (
-                              opdState0
-                              .opdStack
-                              .fromRightLeftwards.head
-                              .toSingleWordNameString()
-                           )
-                           
-                           val introducedVarName = (
-                              opdState2
-                              .storage
-                              .apply(locI )
-                              .toSingleWordNameString()
-                           )
-      
-                           override
-                           val transliteratedForm = {
-                              val impl1 = {
-                                 if opdState0.storage.map(_.toSingleWordNameString()) contains introducedVarName then
-                                    s"/* already declared */ ${introducedVarName } = ${actualValueVarName } "
-                                 else {
-                                    s"let ${introducedVarName } = ${actualValueVarName }"
-                                 }
-                              }
-                              s"/* (?)STORE to $locI */ ${impl1 } ;"
-                           }
-                           
-                        } : Jblt.OfStorageType[FqnStronumericPair[?] ]
+                  def yStorePrependedWithDef(locI: Int): Jblt.OfStorageType[FqnStronumericPair[?] ] = {
+                  /**
+                   * 
+                   * per JVMS, 
+                   * in general, there's nothing to disallow re-assignment to *stores* ;
+                   * this means that *store-area vars* will need to be re-assignable, like `let`.
+                   * 
+                   * however, as 
+                   * *there'll have been declared the corresponding var/const (by previous calls to `toJsBlockLevelStmt`), and
+                   * the var/const will likely have been a `const`*,
+                   * we'll need to move to a distinctive name .
+                   * 
+                   */
+                  if (disallowsBackwardsJump) {
+                  new Jblt {
+                     
+                     val lv = {
+                        opdState0
+                        // .afterLdcOpaque
                      }
+                     
+                     override
+                     val resultingOpdState: Jblt.OpdState[FqnStronumericPair[?] ] = {
+                        lv
+                        /**
+                         * 
+                         * `OpdState.prototype.afterYStoreOpc` will simply use the existing name 
+                         * 
+                         */
+                        .afterYStoreOpc(destStorageIndex = locI )
                      }
-                     extension (f: String) {
 
-                        def ldcPrependedWithDef(): Jblt.OfStorageType[FqnStronumericPair[?] ] = {
-                        new Jblt {
-
-                           override
-                           val resultingOpdState: Jblt.OpdState[FqnStronumericPair[?] ] = {
-                              opdState0
-                              .afterLdcOpaque
-                           }
-      
-                           override
-                           val transliteratedForm = {
-                              // val c = summon(using instr)
-                              val varName = (
-                                 resultingOpdState
-                                 .newlyOpdOnstackPushedVarName
-                              )
-                              // s"${opcodeName } ${c.name }${c.desc } "
-                              s"const $varName = ($f ) ;"
-                           }
-                           
-                        } : Jblt.OfStorageType[FqnStronumericPair[?] ]
+                     override
+                     val transliteratedForm = {
+                        s"/* (?)STORE to $locI */ ;"
+                     }
+                     
+                  } : Jblt.OfStorageType[FqnStronumericPair[?] ]
+                  } /* end of the `true` case */
+                  else {
+                     new Jblt {
+                        
+                        /**
+                         * 
+                         * `opdState0` with expanded `storage` (to cover `locI`)
+                         * 
+                         */
+                        val opdState2 = {
+                           Iterator.iterate[Jblt.OpdState[FqnStronumericPair[?] ] ](opdState0 )({
+                              case s =>
+                                 s
+                                 .afterLdcOpaque
+                                 /**
+                                  * 
+                                  * `OpdState.prototype.afterYStoreOpc` will simply use the existing name 
+                                  * 
+                                  */
+                                 .afterYStoreOpc(destStorageIndex = locI )
+                                 
+                           })
+                           .take(0x1000 ) /* avoid the CPU 100% issue */
+                           .find(s => {
+                              s.storage
+                              .isDefinedAt(locI ) /* a `PartialFunction` method as implemented in `Seq` */
+                           })
+                           .getOrElse(throw IndexOutOfBoundsException(s"unexpected hang" ) )
                         }
                         
-                     }
-                     extension (f: String) {
-
-                        def unaryOpPrependedWithDef(): Jblt.OfStorageType[FqnStronumericPair[?] ] = ({
-                        new Jblt {
-
-                           override
-                           val resultingOpdState: Jblt.OpdState[FqnStronumericPair[?] ] = {
+                        override
+                        val resultingOpdState: Jblt.OpdState[FqnStronumericPair[?] ] = {
+                           opdState2
+                           .copy(opdStack = {
                               opdState0
                               .afterPopoff
-                              .afterLdcOpaque
-                           }
-      
-                           override
-                           val transliteratedForm = {
-                              // val c = summon(using instr)
-                              val varName = (
-                                 resultingOpdState
-                                 .newlyOpdOnstackPushedVarName
-                              )
-                              // s"${opcodeName } ${c.name }${c.desc } "
-                              // unsupportedOpcodeFallbackCompiledCode
-                              f.ldcPrependedWithDef()
-                              .transliteratedForm
-                           }
-                           
-                        } : Jblt.OfStorageType[FqnStronumericPair[?] ]
-                        })
+                              .opdStack
+                           })
+                        }
                         
-                     }
-                     extension (f: String) {
-
-                        def fixedOpdStackOp(): Jblt.OfStorageType[FqnStronumericPair[?] ] = ({
-                        new Jblt {
-
-                           override
-                           val resultingOpdState: Jblt.OpdState[FqnStronumericPair[?] ] = {
-                              opdState0
-                           }
-      
-                           override
-                           val transliteratedForm = {
-                              // s"${opcodeName } ${c.name }${c.desc } "
-                              // unsupportedOpcodeFallbackCompiledCode
-                              s"$f ; "
-                           }
-                           
-                        } : Jblt.OfStorageType[FqnStronumericPair[?] ]
-                        })
+                        /**
+                         * 
+                         */
+                        val actualValueVarName = (
+                           opdState0
+                           .opdStack
+                           .fromRightLeftwards.head
+                           .toSingleWordNameString()
+                        )
                         
+                        val introducedVarName = (
+                           opdState2
+                           .storage
+                           .apply(locI )
+                           .toSingleWordNameString()
+                        )
+   
+                        override
+                        val transliteratedForm = {
+                           val impl1 = {
+                              if opdState0.storage.map(_.toSingleWordNameString()) contains introducedVarName then
+                                 s"/* already declared */ ${introducedVarName } = ${actualValueVarName } "
+                              else {
+                                 s"let ${introducedVarName } = ${actualValueVarName }"
+                              }
+                           }
+                           s"/* (?)STORE to $locI */ ${impl1 } ;"
+                        }
+                        
+                     } : Jblt.OfStorageType[FqnStronumericPair[?] ]
+                  }
+                  }
+
+                  extension (f: String) {
+                     
+                     def ldcPrependedWithDef(): Jblt.OfStorageType[FqnStronumericPair[?] ] = {
+                     new Jblt {
+                        
+                        override
+                        val resultingOpdState: Jblt.OpdState[FqnStronumericPair[?] ] = {
+                           opdState0
+                           .afterLdcOpaque
+                        }
+   
+                        override
+                        val transliteratedForm = {
+                           // val c = summon(using instr)
+                           val varName = (
+                              resultingOpdState
+                              .newlyOpdOnstackPushedVarName
+                           )
+                           // s"${opcodeName } ${c.name }${c.desc } "
+                           s"const $varName = ($f ) ;"
+                        }
+                        
+                     } : Jblt.OfStorageType[FqnStronumericPair[?] ]
                      }
-                     extension (f: String) {
+                     
+                  }
 
-                        def gotoAltOpdStackOp(): Jblt.OfStorageType[FqnStronumericPair[?] ] = ({
+                  extension (f: String) {
+                     
+                     def unaryOpPrependedWithDef(): Jblt.OfStorageType[FqnStronumericPair[?] ] = ({
+                     new Jblt {
+                        
+                        override
+                        val resultingOpdState: Jblt.OpdState[FqnStronumericPair[?] ] = {
+                           opdState0
+                           .afterPopoff
+                           .afterLdcOpaque
+                        }
+   
+                        override
+                        val transliteratedForm = {
+                           // val c = summon(using instr)
+                           val varName = (
+                              resultingOpdState
+                              .newlyOpdOnstackPushedVarName
+                           )
+                           // s"${opcodeName } ${c.name }${c.desc } "
+                           // unsupportedOpcodeFallbackCompiledCode
+                           f.ldcPrependedWithDef()
+                           .transliteratedForm
+                        }
+                        
+                     } : Jblt.OfStorageType[FqnStronumericPair[?] ]
+                     })
+                     
+                  }
+
+                  extension (f: String) {
+                     
+                     def fixedOpdStackOp(): Jblt.OfStorageType[FqnStronumericPair[?] ] = ({
+                     new Jblt {
+                        
+                        override
+                        val resultingOpdState: Jblt.OpdState[FqnStronumericPair[?] ] = {
+                           opdState0
+                        }
+   
+                        override
+                        val transliteratedForm = {
+                           // s"${opcodeName } ${c.name }${c.desc } "
+                           // unsupportedOpcodeFallbackCompiledCode
+                           s"$f ; "
+                        }
+                        
+                     } : Jblt.OfStorageType[FqnStronumericPair[?] ]
+                     })
+                     
+                  }
+                  
+                  extension (f: String) {
+                     
+                     def gotoAltOpdStackOp(): Jblt.OfStorageType[FqnStronumericPair[?] ] = ({
+                     new Jblt {
+                        
+                        override
+                        val resultingOpdState: Jblt.OpdState[FqnStronumericPair[?] ] = {
+                           opdState0
+                           .copy(opdStack = JbltOpdStackState.empty )
+                        }
+   
+                        override
+                        val transliteratedForm = {
+                           // s"${opcodeName } ${c.name }${c.desc } "
+                           // unsupportedOpcodeFallbackCompiledCode
+                           s"$f ; "
+                        }
+                        
+                     } : Jblt.OfStorageType[FqnStronumericPair[?] ]
+                     })
+                     
+                  }
+
+                  extension (f: String) {
+                     
+                     def gotoPrependedWithDef(): Jblt.OfStorageType[FqnStronumericPair[?] ] = (
+                        // tbmt_???
                         new Jblt {
-
+                           
                            override
                            val resultingOpdState: Jblt.OpdState[FqnStronumericPair[?] ] = {
                               opdState0
@@ -474,45 +504,25 @@ class wsnImplCtx1(
       
                            override
                            val transliteratedForm = {
-                              // s"${opcodeName } ${c.name }${c.desc } "
-                              // unsupportedOpcodeFallbackCompiledCode
-                              s"$f ; "
+                              // TODO
+                              s"goto /* what??? */ ;"
                            }
                            
                         } : Jblt.OfStorageType[FqnStronumericPair[?] ]
-                        })
-                        
-                     }
-                     extension (f: String) {
-
-                        def gotoPrependedWithDef(): Jblt.OfStorageType[FqnStronumericPair[?] ] = (
-                           // tbmt_???
-                           new Jblt {
-
-                              override
-                              val resultingOpdState: Jblt.OpdState[FqnStronumericPair[?] ] = {
-                                 opdState0
-                                 .copy(opdStack = JbltOpdStackState.empty )
-                              }
-         
-                              override
-                              val transliteratedForm = {
-                                 // TODO
-                                 s"goto /* what??? */ ;"
-                              }
-                              
-                           } : Jblt.OfStorageType[FqnStronumericPair[?] ]
-                        )
-                        
-                     }
-                     def opdStackTopmostItem(i: Int) = {
-                        //
-                        opdState0
-                        .opdStack.
-                        fromRightLeftwards(i)
-                        .toSingleWordNameString()
-
-                     } /* opdStackTopmostItem */
+                     )
+                     
+                  }
+                  
+                  def opdStackTopmostItem(i: Int) = {
+                     //
+                     opdState0
+                     .opdStack.
+                     fromRightLeftwards(i)
+                     .toSingleWordNameString()
+                     
+                  } /* opdStackTopmostItem */
+                  
+                  locally {
                      val opcodeName = (
                         opcodeNameTable.apply(instr.getOpcode())
                      )
