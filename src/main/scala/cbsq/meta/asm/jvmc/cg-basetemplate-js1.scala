@@ -250,6 +250,7 @@ class wsnImplCtx1(
                      }
                      
                   }
+                  
                   locally {
                      import instropc.disallowsBackwardsJump
                      import instropc.toSingleWordNameString
