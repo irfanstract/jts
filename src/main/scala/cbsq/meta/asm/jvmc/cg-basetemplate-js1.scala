@@ -254,28 +254,9 @@ class wsnImplCtx1(
                      
                   }
          
-      }
+                  export instropc.disallowsBackwardsJump
 
-      extension (instr: org.objectweb.asm.tree.AbstractInsnNode) {
-
-         def toJsBlockLevelStmt(
-            opdState0: Jblt.OpdState[FqnStronumericPair[?] ] ,
-
-         )(using instropc : InOpdCtx)(using Sdc): Jblt.OfStorageType[FqnStronumericPair[?] ] = {
-                  import scala.language.unsafeNulls
-                  import scala.jdk.CollectionConverters.*
-                  import org.objectweb.asm
-                  val analysis1 = (
-                     analyseTjbStat1.apply(
-                        opdState0 = opdState0 ,
-                        
-                     )
-                  )
-                  import analysis1.*
-
-                  import instropc.disallowsBackwardsJump
-
-                  import instropc.toSingleWordNameString
+                  export instropc.toSingleWordNameString
 
                   extension (f: String) { /* pop-off */
                      
@@ -544,6 +525,25 @@ class wsnImplCtx1(
                      
                   } /* opdStackTopmostItem */
                   
+      }
+
+      extension (instr: org.objectweb.asm.tree.AbstractInsnNode) {
+
+         def toJsBlockLevelStmt(
+            opdState0: Jblt.OpdState[FqnStronumericPair[?] ] ,
+
+         )(using instropc : InOpdCtx)(using Sdc): Jblt.OfStorageType[FqnStronumericPair[?] ] = {
+                  import scala.language.unsafeNulls
+                  import scala.jdk.CollectionConverters.*
+                  import org.objectweb.asm
+                  val analysis1 = (
+                     analyseTjbStat1.apply(
+                        opdState0 = opdState0 ,
+                        
+                     )
+                  )
+                  import analysis1.*
+
                   locally {
                      val opcodeName = (
                         opcodeNameTable.apply(instr.getOpcode())
