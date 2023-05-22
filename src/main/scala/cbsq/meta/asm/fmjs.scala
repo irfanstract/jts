@@ -18,12 +18,12 @@ package cbsq.meta.asm
 
 
 
-def fcv(o: java.io.PrintWriter) : ow.ClassVisitor = {
+def fcv(o: java.io.PrintWriter)(using cbsq.meta.asm.jsgen.TsConfig) : ow.ClassVisitor = {
    import org.objectweb.asm
    new asm.ClassVisitor(asm.Opcodes.ASM9) {
 
       var s : Wsn = (
-         wsnImpl( )
+         wsnImpl(generatedJsConfig = summon[cbsq.meta.asm.jsgen.TsConfig] )
       )
       
       override

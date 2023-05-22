@@ -53,7 +53,10 @@ extension (o: java.io.PrintWriter) {
 
 
 
-class wsnImplCtx1() {
+class wsnImplCtx1(
+   val generatedJsConfig: cbsq.meta.asm.jsgen.TsConfig ,
+
+) {
    object eRpkImpl extends
    AnyRef
    with ERpk

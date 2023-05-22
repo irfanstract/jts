@@ -26,8 +26,13 @@ export cbsq.meta.asm.jvmc.WsnPwEmitter
 
 export cbsq.meta.asm.jvmc.wsnImplCtx1
 
-def wsnImpl() = {
-   val wsni = wsnImplCtx1()
+def wsnImpl(
+   generatedJsConfig: cbsq.meta.asm.jsgen.TsConfig ,
+
+) = {
+   val wsni = {
+      wsnImplCtx1(generatedJsConfig = generatedJsConfig)
+   }
    import wsni.*
 
    sealed case class forConfig(
