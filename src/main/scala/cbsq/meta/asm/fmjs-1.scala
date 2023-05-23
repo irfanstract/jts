@@ -434,11 +434,6 @@ def wsnImpl(
                   )
                })
                
-               val preInstrItrLoopStackState1 = (
-                  postArgsPopulativeStackState
-                  
-               )
-
                extension (ce : (
                   Jblt.OpdState[FqnStronumericPair[?] ] ,
                   Seq[(asm.tree.AbstractInsnNode, Int)] ,
@@ -568,6 +563,13 @@ def wsnImpl(
 
                }
                
+               {
+               
+               val preInstrItrLoopStackState1 = (
+                  postArgsPopulativeStackState
+                  
+               )
+
                ({
 
                   (code.nn : asm.tree.MethodNode)
@@ -578,6 +580,8 @@ def wsnImpl(
                   
                }, preInstrItrLoopStackState1 ).swap
                .xCompileInstructionListAndEmit()
+               
+               }
 
                o println "  }"
 
