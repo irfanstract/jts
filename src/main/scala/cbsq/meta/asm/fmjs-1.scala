@@ -324,6 +324,7 @@ def wsnImpl(
                
                val initialStackState = ({
                   Jblt.OpdState[FqnStronumericPair[?] ](
+
                      // TODO
                      opdStack = (
                         JbltOpdStackState.byFromLeftRightwards((
@@ -331,7 +332,9 @@ def wsnImpl(
                         ))
                      ) ,
                      storage = IndexedSeq.empty ,
+
                      lastItemgenState = ("lclv", 1) ,
+                     
                   )
                })
                
