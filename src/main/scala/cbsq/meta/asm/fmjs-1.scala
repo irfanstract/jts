@@ -246,14 +246,20 @@ def wsnImpl(
                import asm.Opcodes
                code.isEffectivelyNonAbstract()
             }) {
+               
                import scala.language.unsafeNulls
+               
                import scala.jdk.CollectionConverters.{ListHasAsScala, IterableHasAsScala }
                import org.objectweb.asm
+
                import cbsq.meta.asm.jvm.opcodeNameTable
+
                import cbsq.meta.asm.jvm.FqnStronumericPair
                import cbsq.meta.asm.jvm.JbltOpdStackState
                import cbsq.meta.asm.jvmc.Jblt
+
                o println "  {"
+
                if true then {
                   o println s"    /* "
                   o println s"     * "
@@ -267,11 +273,13 @@ def wsnImpl(
                val operandsFmt = {
                   "code$<index>$operands"
                }
+
                def operandsForIndex(instrOrdinal: Int): String = {
                         import scala.util.matching.Regex.{quote, quoteReplacement}
                         operandsFmt
                         .replaceAll(quote("<index>"), ((instrOrdinal).toString().reverse.padTo(3, '0').reverse) )
                }
+               
                o println s"    /* "
                o println s"     * "
                o println s"     * J2JS detail : "
@@ -326,6 +334,7 @@ def wsnImpl(
                      lastItemgenState = ("lclv", 1) ,
                   )
                })
+               
                val (
                   postArgsPopulativeStackState ,
                   
@@ -421,10 +430,12 @@ def wsnImpl(
                      ,
                   )
                })
+               
                val preInstrItrLoopStackState1 = (
                   postArgsPopulativeStackState
                   
                )
+
                extension (ce : (
                   Jblt.OpdState[FqnStronumericPair[?] ] ,
                   Seq[(asm.tree.AbstractInsnNode, Int)] ,
@@ -543,6 +554,7 @@ def wsnImpl(
                }
 
                }
+               
                ({
 
                   (code.nn : asm.tree.MethodNode)
@@ -553,7 +565,9 @@ def wsnImpl(
                   
                }, preInstrItrLoopStackState1 ).swap
                .xCompileInstructionListAndEmit()
+
                o println "  }"
+
             }
             else {
                import scala.language.unsafeNulls
