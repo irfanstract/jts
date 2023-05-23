@@ -127,6 +127,45 @@ object PwEmitter {
 
 
 
+extension (o: java.io.Writer) {
+
+   def asIndentedPrintWriter(indentPattern: String ): Unit = {
+      import language.unsafeNulls
+      import scala.jdk.CollectionConverters.*
+      import cbsq.meta.util.PwEmitter
+      new java.io.PrintWriter({
+         new java.io.Writer {
+
+            override def close(): Unit = {}
+            override def flush(): Unit = o.flush()
+
+            private 
+            lazy val didInitialLineIndentEmittted = {
+               o write indentPattern
+            }
+            private
+            def writeImpl(s: String): Unit = {
+               import scala.util.matching.Regex.{quote, quoteReplacement }
+               didInitialLineIndentEmittted
+               o write (s replaceAll("\\r?\\n", "$0" + quoteReplacement(indentPattern) ) )
+            }
+
+            override
+            def write(cbuf: Array[Char] | Null, off: Int, len: Int): Unit = {
+               val s = new String(cbuf, off, len)
+               writeImpl(s)
+            }
+
+         }
+      })
+   }
+
+}
+
+
+
+
+
 
 
 
