@@ -39,6 +39,25 @@ extension (e: MethodDescriptorImpl1) {
    }
 }
 
+extension (code: org.objectweb.asm.tree.MethodNode) {
+
+   def isEffectivelyNonAbstract(): Boolean = {
+            import scala.language.unsafeNulls
+            import org.objectweb.asm
+            import asm.Opcodes
+            (
+               code != null
+               && (
+                  (code.access & (Opcodes.ACC_NATIVE | Opcodes.ACC_ABSTRACT)) == 0 
+               )
+               && (
+                  0 < (code.nn : asm.tree.MethodNode).instructions.size()
+               )
+            )
+   }
+   
+}
+
 
 
 
