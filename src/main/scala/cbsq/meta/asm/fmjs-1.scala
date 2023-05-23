@@ -549,6 +549,26 @@ def wsnImpl(
          
       }
 
+      val methodNamesOrdering: Ordering[NativeSigImpl] = {
+         (
+               Ordering.by((e: NativeSigImpl) => {
+                  import org.objectweb.asm.Opcodes
+                  import e.{access as acc  }
+                  import e.{name   as nm   }
+                  
+                  (
+                     acc.&(Opcodes.ACC_BRIDGE) ,
+                     acc.&(Opcodes.ACC_SYNTHETIC) ,
+                     acc.&(Opcodes.ACC_STATIC) ,
+                     "public protected package-private".indexOf(e.visibility ) & ~Int.MinValue ,
+                     "\\$(?!a?sync(?:hronous|)|tupled?|\\d+\\z)".r.findFirstIn(nm).nonEmpty ,
+                     // "\\$(?!tupled)".r.findFirstIn(nm).nonEmpty ,
+                     nm ,
+                  )
+               })
+         )
+      }
+
       lazy val distilledFormPwEmitter = ({
       ;
 
@@ -609,21 +629,15 @@ def wsnImpl(
             methodsByTsDescMap
             .filterKeys(nameAndSig2 => !(hideableMethodsEffectively contains nameAndSig2) )
             .toSeq
-            .sortBy((identity[NativeSigImpl]).andThen({
-               case e => 
-                  import org.objectweb.asm.Opcodes
-                  import e.{access as acc  }
-                  import e.{name   as nm   }
-                  (
-                     acc.&(Opcodes.ACC_BRIDGE) ,
-                     acc.&(Opcodes.ACC_SYNTHETIC) ,
-                     acc.&(Opcodes.ACC_STATIC) ,
-                     "public protected package-private".indexOf(e.visibility ) & ~Int.MinValue ,
-                     "\\$(?!a?sync(?:hronous|)|tupled?|\\d+\\z)".r.findFirstIn(nm).nonEmpty ,
-                     // "\\$(?!tupled)".r.findFirstIn(nm).nonEmpty ,
-                     nm ,
-                  )
-            }).compose[(NativeSigImpl, org.objectweb.asm.MethodVisitor)](_._1))
+            .sorted(using (
+               
+               methodNamesOrdering
+               match {
+                  case ord =>
+                     Ordering.by((_: (NativeSigImpl, org.objectweb.asm.MethodVisitor) )._1 )(using ord)
+               }
+
+            ))
          )) {
             o.printXClassMethodDefUnconditionally(dsc10, code = code10B)(using {
                new cbsq.meta.asm.jvmc.Sdc {
