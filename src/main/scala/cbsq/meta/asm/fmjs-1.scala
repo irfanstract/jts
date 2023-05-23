@@ -436,6 +436,14 @@ def wsnImpl(
                   
                   given cbsq.meta.asm.jvmc.InOpdCtx with {
                   }
+                  val instrOutcomeAnalysed = {
+                     instr.toJsBlockLevelStmt(opdState0 = opdState )
+                  }
+                  import instrOutcomeAnalysed.resultingOpdState
+                  val instrS = {
+                     instrOutcomeAnalysed.transliteratedForm
+                  }
+                  
                   /**
                    * a *label* might indicate possibly-large linebreak and
                    * the generated JS would likely have been way congested
@@ -486,13 +494,6 @@ def wsnImpl(
                      )
                   ) then {
                      opdState.printHotStackInfo()
-                  }
-                  val instrOutcomeAnalysed = {
-                     instr.toJsBlockLevelStmt(opdState0 = opdState )
-                  }
-                  import instrOutcomeAnalysed.resultingOpdState
-                  val instrS = {
-                     instrOutcomeAnalysed.transliteratedForm
                   }
                   o.println(s"${instrS.indent(2 * 2).dropRight(1) }" )
                   
