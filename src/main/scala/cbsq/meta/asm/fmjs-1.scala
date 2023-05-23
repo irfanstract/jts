@@ -245,6 +245,9 @@ def wsnImpl(
                import scala.jdk.CollectionConverters.{ListHasAsScala, IterableHasAsScala }
                import org.objectweb.asm
                import cbsq.meta.asm.jvm.opcodeNameTable
+               import cbsq.meta.asm.jvm.FqnStronumericPair
+               import cbsq.meta.asm.jvm.JbltOpdStackState
+               import cbsq.meta.asm.jvmc.Jblt
                o println "  {"
                if true then {
                   o println s"    /* "
@@ -307,9 +310,6 @@ def wsnImpl(
                }
                
                val initialStackState = ({
-                  import cbsq.meta.asm.jvm.FqnStronumericPair
-                  import cbsq.meta.asm.jvm.JbltOpdStackState
-                  import cbsq.meta.asm.jvmc.Jblt
                   Jblt.OpdState[FqnStronumericPair[?] ](
                      // TODO
                      opdStack = (
@@ -325,9 +325,6 @@ def wsnImpl(
                   postArgsPopulativeStackState ,
                   
                ) = ({
-                  import cbsq.meta.asm.jvm.FqnStronumericPair
-                  import cbsq.meta.asm.jvm.JbltOpdStackState
-                  import cbsq.meta.asm.jvmc.Jblt
                   
                   val nonReceiverArity = {
                         import language.unsafeNulls
@@ -420,8 +417,6 @@ def wsnImpl(
                   )
                })
                for (((instr, instrOrdinal), opdState) <- ({
-                  import cbsq.meta.asm.jvm.FqnStronumericPair
-                  import cbsq.meta.asm.jvmc.Jblt
 
                   (code.nn : asm.tree.MethodNode)
                   .instructions
