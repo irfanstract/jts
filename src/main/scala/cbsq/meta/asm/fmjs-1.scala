@@ -446,6 +446,8 @@ def wsnImpl(
                
                def xCompileInstructionListAndEmit(
 
+                  disallowBackwardsJump1: Boolean = false,
+
                ): Unit = {
                val (preLoop1OpdState, ops) = ce
                
@@ -458,6 +460,11 @@ def wsnImpl(
                   ;
                   
                   given cbsq.meta.asm.jvmc.InOpdCtx with {
+                     
+                     override
+                     lazy val disallowsBackwardsJump: disallowBackwardsJump1.type = {
+                        disallowBackwardsJump1
+                     }
                      
                   }
                   val instrOutcomeAnalysed = {
