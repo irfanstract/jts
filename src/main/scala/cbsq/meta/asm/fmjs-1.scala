@@ -444,7 +444,9 @@ def wsnImpl(
                   Seq[(asm.tree.AbstractInsnNode, Int)] ,
                )) {
                
-               def xCompileInstructionListAndEmit(): Unit = {
+               def xCompileInstructionListAndEmit(
+
+               ): Unit = {
                val (preLoop1OpdState, ops) = ce
                
                for (((instr, instrOrdinal), opdState) <- ({
@@ -456,6 +458,7 @@ def wsnImpl(
                   ;
                   
                   given cbsq.meta.asm.jvmc.InOpdCtx with {
+                     
                   }
                   val instrOutcomeAnalysed = {
                      instr.toJsBlockLevelStmt(opdState0 = opdState )
