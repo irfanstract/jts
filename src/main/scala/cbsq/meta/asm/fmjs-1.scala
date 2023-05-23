@@ -467,6 +467,35 @@ def wsnImpl(
 
                }
                
+               type XBlockSeparativeNode = (
+                  asm.tree.LabelNode
+                  // asm.tree.FrameNode
+               )
+               
+               extension [I](instrs: Seq[(asm.tree.AbstractInsnNode, I)] ) {
+
+                  def splitAtLabels() = {
+
+                     instrs
+                     .foldLeft[Vector[Seq[(asm.tree.AbstractInsnNode, I) ] ] ](Vector() )({
+                           
+                        case (s0 :+ lastG, nextItrItem @ (_ : (
+                           XBlockSeparativeNode
+                        ), _)) =>
+                           (s0 :+ (lastG :+ nextItrItem ) ) :+ Seq(nextItrItem )
+                           
+                        case (s0 :+ lastG, nextItem @ (nextInstr, _) ) if (!(nextInstr.isInstanceOf[XBlockSeparativeNode] ) ) =>
+                           s0 :+ (lastG :+ nextItem )
+                           
+                        case (Seq(), nextItem) =>
+                           Vector() :+ Seq(nextItem )
+
+                     })
+                     
+                  }
+
+               }
+               
                val nonReceiverArity = {
                      import language.unsafeNulls
                      import org.objectweb.asm
@@ -570,6 +599,11 @@ def wsnImpl(
                   
                )
 
+               o println s"    loop1 :  "
+               o println s"    for (let nextBranch = 1;; ) {  "
+               o println s"       "
+               o println s"      switch (nextBranch) {   "
+               o println s"       "
                ({
 
                   (code.nn : asm.tree.MethodNode)
@@ -578,8 +612,52 @@ def wsnImpl(
                   .toSeq
                   .zipWithIndex
                   
-               }, preInstrItrLoopStackState1 ).swap
-               .xCompileInstructionListAndEmit()
+               })
+               .splitAtLabels()
+               .zipWithIndex.map((v, i) => (1 + i, v ) )
+               .map((i, v) => {
+                  val opdState10 = (
+                     preInstrItrLoopStackState1
+                  )
+                  val isCatchClause = {
+                        import language.unsafeNulls
+                        import scala.jdk.CollectionConverters.*
+                        val startingLabel = (
+                           v
+                           .collectFirst({ case (e : XBlockSeparativeNode, _) => e })
+                           .get
+                        )
+                        (code : asm.tree.MethodNode)
+                        .tryCatchBlocks
+                        .asScala
+                        .find(e => (
+                           e.start
+                           == startingLabel
+                        ) )
+                        .nonEmpty
+                        
+                  }
+                  val opdState11 = (
+                     if isCatchClause then opdState10.afterLdcOpaque
+                     else opdState10
+                  )
+                  // TODO
+                  o println s"      case $i :   "
+                  o println s"      { "
+                  if isCatchClause then {
+                     o println s"        // catch-block  "
+                  }
+                  o println s"        // ${v.length } instructions  "
+                  // o println s"        throw ;  "
+                  (v, opdState11 ).swap
+                  .xCompileInstructionListAndEmit()
+                  o println s"      } "
+                  o println s"       "
+               })
+               // TODO
+               o println s"      }   "
+               o println s"       "
+               o println s"    }"
                
                }
 
