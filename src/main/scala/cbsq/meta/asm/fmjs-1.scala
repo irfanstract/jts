@@ -416,15 +416,22 @@ def wsnImpl(
                      ,
                   )
                })
+               val preInstrItrLoopStackState1 = (
+                  postArgsPopulativeStackState
+                  
+               )
+               extension (ce : (
+                  Jblt.OpdState[FqnStronumericPair[?] ] ,
+                  Seq[(asm.tree.AbstractInsnNode, Int)] ,
+               )) {
+               
+               def xCompileInstructionListAndEmit(): Unit = {
+               val (preLoop1OpdState, ops) = ce
+               
                for (((instr, instrOrdinal), opdState) <- ({
-
-                  (code.nn : asm.tree.MethodNode)
-                  .instructions
-                  .asScala
-                  .toSeq
-                  .zipWithIndex
+                  ops
                   .unfolding[Jblt.OpdState[FqnStronumericPair[?] ] ]((
-                     postArgsPopulativeStackState
+                     preLoop1OpdState
                      
                   ))({ case (opdState, (instr, instrOrdinal) ) => {
                   ;
@@ -528,6 +535,19 @@ def wsnImpl(
                   }})
                }) ) {
                }
+               }
+
+               }
+               ({
+
+                  (code.nn : asm.tree.MethodNode)
+                  .instructions
+                  .asScala
+                  .toSeq
+                  .zipWithIndex
+                  
+               }, preInstrItrLoopStackState1 ).swap
+               .xCompileInstructionListAndEmit()
                o println "  }"
             }
             else {
