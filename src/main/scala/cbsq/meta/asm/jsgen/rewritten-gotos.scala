@@ -113,6 +113,82 @@ object RewrittenJumpingBasedFlowStyle
    extends
    RewrittenJumpingBasedFlowStyle
 
+   /**
+    * 
+    * this style
+    * avoids mutable var(s), except for the main-loop vars, and
+    * is based on
+    * defining the `evalBranchYyy` funcs which uses *destructuring* and returns `XIteratorState`
+    * 
+    * ```
+    * code
+    * 
+    * interface XIteratorState {
+    *    next        ?: () => XIteratorState ;
+    *    returnValue ?: any ; 
+    * }
+    * 
+    * // all these 'evalBranchYyy' function(s)
+    * // shall return '{ next?: () => void, returnValue?: any, }'
+    * 
+    * const evalBranch1 = ({ val1, val2, val3, ... }) => {
+    *    ...
+    *    ...
+    *    // from JVM opcode 'goto ...'
+    *    return { next: () => evalBranchYyy() , } ;
+    * }
+    * 
+    * const evalBranch5 = ({ val15, val16, val17, ... }) => {
+    *    ...
+    *    ...
+    *    // from JVM opcode 'ifeq ...'
+    *    if (...) {
+    *       return { next: () => evalBranchA() , } ;
+    *    }
+    *    ...
+    *    // from JVM opcode 'goto ...'
+    *    return { next: () => evalBranchB() , } ;
+    * }
+    * 
+    * const evalBranch9 = ({ ... }) => {
+    *    ...
+    *    ...
+    *    // from JVM opcode '*return'
+    *    return { returnValue: valYyy, } ;
+    * }
+    * 
+    * ...
+    * ...
+    * 
+    * {
+    *    let { next } : XIteratorState = ({
+    *       next : () => (
+    *          // the initial branch
+    *          evalBranch1(.....)
+    *       ) ,
+    * 
+    *    }) ;
+    *    let returnValue ;
+    * 
+    *    for (;;) {
+    *       ({ next, returnValue } = (nextFnc as NonNull )() ) ;
+    * 
+    *       if (next ) {
+    *       } else {
+    *          return returnValue ;
+    *       }
+    * 
+    *    }
+    * 
+    * }
+    * 
+    * ```
+    * 
+    */
+   case class OfContipLoop()
+   extends
+   RewrittenJumpingBasedFlowStyle
+
 }
 
 
