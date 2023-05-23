@@ -1112,6 +1112,7 @@ class wsnImplCtx1(
    export cbsq.meta.asm.jvm.{MethodDescriptorImpl1 as NativeSigImpl }
    export cbsq.meta.asm.jvmc.toJsMethodDeclString
    export cbsq.meta.asm.jvmc.{isSynthetic, isEffectivelyPrivate}
+   export cbsq.meta.asm.jvmc.{isEffectivelyNonAbstract }
    // type NativeSigImpl
    //    >: (Int, String)
    //    <: (Int, String)
