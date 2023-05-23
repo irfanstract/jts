@@ -192,11 +192,14 @@ def wsnImpl(
             code: Null | org.objectweb.asm.tree.MethodNode
          )(using cbsq.meta.asm.jvmc.Sdc) = {
             import cbsq.meta.asm.jvmc.toJsMethodDeclString
+            
             import cbsq.meta.asm.jvmc.{isSynthetic, isEffectivelyPrivate}
+
             val dsc1 = (
                dsc10
                .toJsMethodDeclString()
             )
+
             val getOriginalSigE : () => ((NativeSigImpl.Fmtct) ?=> String) = {
                if (code != null) then
                   import org.objectweb.asm
@@ -212,6 +215,7 @@ def wsnImpl(
                   () => (c) ?=> dsc10.toShortString()(using c )
                )
             }
+
             o.println(s"  /**")
             o.println(s"   * ")
             o.println(s"   * method `${dsc10.name }` ")
@@ -232,6 +236,7 @@ def wsnImpl(
                .replaceFirst("\\A\\s*", "  ")
                .replaceFirst(";\\s*\\z", "")
             }) )
+
             if ((
                (generatedJsConfig.isForTypeDeclarationFile == false)
                
@@ -554,7 +559,9 @@ def wsnImpl(
                import scala.language.unsafeNulls
                o println "  ;"
             }
+            
             o.println()
+
          }
          
       }
