@@ -467,6 +467,38 @@ def wsnImpl(
 
                }
                
+               val nonReceiverArity = {
+                     import language.unsafeNulls
+                     import org.objectweb.asm
+                     
+                     asm.Type.getType(dsc10.descriptor )
+                     .getArgumentTypes().toIndexedSeq
+                     .length
+                     
+               }
+               
+               /**
+                * 
+                * the args, including conditional `this`
+                * 
+                */
+               val srcArgRefs = (
+                  Range(0, nonReceiverArity )
+                  .map(srcArgIndex => (
+                     s"args[$srcArgIndex]"
+                  ))
+                  .prependedAll[String]({
+                     import asm.Opcodes
+                     if (
+                        (Opcodes.ACC_STATIC & (code : asm.tree.MethodNode).access )
+                        == 0
+                     ) then
+                        Seq.empty :+ "this"
+                     else Seq.empty
+                  })
+               )
+               // assert(srcArgRefs.nonEmpty)
+  
                {
                
                val (
@@ -474,38 +506,6 @@ def wsnImpl(
                   
                ) = ({
                   
-                  val nonReceiverArity = {
-                        import language.unsafeNulls
-                        import org.objectweb.asm
-
-                        asm.Type.getType(dsc10.descriptor )
-                        .getArgumentTypes().toIndexedSeq
-                        .length
-
-                  }
-
-                  /**
-                   * 
-                   * the args, including conditional `this`
-                   * 
-                   */
-                  val srcArgRefs = (
-                     Range(0, nonReceiverArity )
-                     .map(srcArgIndex => (
-                        s"args[$srcArgIndex]"
-                     ))
-                     .prependedAll[String]({
-                        import asm.Opcodes
-                        if (
-                           (Opcodes.ACC_STATIC & (code : asm.tree.MethodNode).access )
-                           == 0
-                        ) then
-                           Seq.empty :+ "this"
-                        else Seq.empty
-                     })
-                  )
-                  // assert(srcArgRefs.nonEmpty)
-
                   /**
                    * 
                    * the initial-value expr(s) for the local(s), in-order
