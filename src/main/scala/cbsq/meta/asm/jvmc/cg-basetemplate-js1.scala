@@ -594,6 +594,14 @@ class wsnImplCtx1(
                                  s"/* $opcodeName */ (void 0)"
                                  .popoffPrependedWithDef(n = n )
 
+                              case e @ ("MONITORENTER" | "MONITOREXIT") =>
+                                 val n = {
+                                    1
+                                 }
+                                 // TODO
+                                 s"/* $opcodeName */ (void 0)"
+                                 .popoffPrependedWithDef(n = n )
+
                               case e @ (YBiOp(_*) | YUnrOp(_*)) =>
                                  val (name, desc) = {
                                     e match {
