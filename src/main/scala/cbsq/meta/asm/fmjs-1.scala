@@ -383,6 +383,7 @@ def wsnImpl(
                   }
                   if (
                      false
+                     || instr.isInstanceOf[asm.tree.FrameNode]
                      || instr.isInstanceOf[asm.tree.LabelNode]
                      || ({
                         import cbsq.meta.asm.jvm.opcodeNameTable
