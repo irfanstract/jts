@@ -120,7 +120,11 @@ def fcvDemo101(): Unit = {
       .withJsSpecificMethods()
       // .asMakingAsyncifiedVariants()
       // .asMakingTupledVariants()
-   ) , org.objectweb.asm.ClassReader.SKIP_FRAMES )
+   ) , {
+      import org.objectweb.asm.ClassReader.*
+      0
+      .|(SKIP_FRAMES)
+   } )
 }
 
 
