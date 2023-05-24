@@ -358,6 +358,15 @@ def wsnImpl(
                   ))({ case (opdState, (instr, instrOrdinal) ) => {
                   ;
                   
+                  extension (s : String) {
+                     def indentWithCurrentInstrOrdinal: String = {
+                        s
+                        .split({ "\\r?\\n" })
+                           .map(l => s"/* #$instrOrdinal */ $l ")
+                           .mkString("\n")
+                     }
+                  }
+                  
                   given cbsq.meta.asm.jvmc.InOpdCtx with {
                      
                      override
