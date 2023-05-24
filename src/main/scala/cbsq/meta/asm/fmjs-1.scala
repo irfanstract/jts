@@ -468,6 +468,35 @@ def wsnImpl(
 
                }
                
+               type XBlockSeparativeNode = (
+                  // asm.tree.LabelNode
+                  asm.tree.FrameNode
+               )
+               
+               extension [I](instrs: Seq[(asm.tree.AbstractInsnNode, I)] ) {
+
+                  def splitAtLabels() = {
+
+                     instrs
+                     .foldLeft[Vector[Seq[(asm.tree.AbstractInsnNode, I) ] ] ](Vector() )({
+                           
+                        case (s0 :+ lastG, nextItrItem @ (_ : (
+                           XBlockSeparativeNode
+                        ), _)) =>
+                           (s0 :+ (lastG :+ nextItrItem ) ) :+ Seq(nextItrItem )
+                           
+                        case (s0 :+ lastG, nextItem @ (nextInstr, _) ) if (!(nextInstr.isInstanceOf[XBlockSeparativeNode] ) ) =>
+                           s0 :+ (lastG :+ nextItem )
+                           
+                        case (Seq(), nextItem) =>
+                           Vector() :+ Seq(nextItem )
+
+                     })
+                     
+                  }
+
+               }
+               
                val nonReceiverArity = {
                      import language.unsafeNulls
                      import org.objectweb.asm
@@ -571,6 +600,18 @@ def wsnImpl(
                   
                )
 
+               
+               o println ""
+               
+               o println s"    let S_exception = null ;"
+
+               o println ""
+
+               o println s"    loop1 :  "
+               o println s"    for (let nextBranch = 1;; ) {  "
+               o println s"       "
+               o println s"      switch (nextBranch) {   "
+               o println s"       "
                ({
 
                   (code.nn : asm.tree.MethodNode)
@@ -579,8 +620,64 @@ def wsnImpl(
                   .toSeq
                   .zipWithIndex
                   
-               }, preInstrItrLoopStackState1 ).swap
-               .xCompileInstructionListAndEmit()
+               })
+               .splitAtLabels()
+               .zipWithIndex.map((v, i) => (1 + i, v ) )
+               .map((i, instructions) => {
+                  val opdState10 = (
+                     preInstrItrLoopStackState1
+                  )
+                  val isCatchClause = {
+                        import language.unsafeNulls
+                        import scala.jdk.CollectionConverters.*
+                        val startingLabel = (
+                           instructions
+                           .collectFirst({ case (e : asm.tree.LabelNode, _) => e })
+                           .get
+                        )
+                        (code : asm.tree.MethodNode)
+                        .tryCatchBlocks
+                        .asScala
+                        .find(e => (
+                           e.start
+                           == startingLabel
+                        ) )
+                        .nonEmpty
+                        
+                  }
+                  val opdState11 = (
+                     if isCatchClause then opdState10.afterLdcOpaque
+                     else opdState10
+                  )
+                  // TODO
+                  o println s"      case $i :   "
+                  o println s"      { "
+                  if isCatchClause then {
+                     o println s"        // catch-block  "
+                     val catchLocalVarName = (
+                        opdState11
+                        .opdStack
+                        .fromRightLeftwards.head
+                        .toSingleWordNameString()
+                     )
+                     o println s"        const ${catchLocalVarName } = [S_exception, S_exception = null ][0] ;  "
+                  }
+                  o println s"        // ${instructions.length } instructions  "
+                  o println s"    "
+                  // o println s"        throw ;  "
+                  (instructions, opdState11 ).swap
+                  .xCompileInstructionListAndEmit()
+                  o println s"    "
+                  // o println s"        throw ;  "
+                  o println s"        nextBranch = ??? ; continue loop1 ; "
+                  o println s"    "
+                  o println s"      } "
+                  o println s"       "
+               })
+               // TODO
+               o println s"      }   "
+               o println s"       "
+               o println s"    }"
                
                }
 
