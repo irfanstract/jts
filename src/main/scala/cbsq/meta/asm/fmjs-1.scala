@@ -381,6 +381,7 @@ def wsnImpl(
                   import instrOutcomeAnalysed.resultingOpdState
                   val instrS = {
                      instrOutcomeAnalysed.transliteratedForm
+                     .indentWithCurrentInstrOrdinal
                   }
                   
                   /**
@@ -475,6 +476,49 @@ def wsnImpl(
                }) ) {
                }
                }
+
+               }
+               
+               type XBlockSeparativeNode = (
+                  // asm.tree.LabelNode
+                  asm.tree.FrameNode
+               )
+               
+               extension [I](instrs: Seq[(asm.tree.AbstractInsnNode, I)] ) {
+
+                  def splitAtLabels() = {
+
+                     instrs
+                     .foldLeft[Vector[Seq[(asm.tree.AbstractInsnNode, I) ] ] ](Vector() )({
+                           
+                        case (s0 :+ lastG, nextItrItem @ (_ : (
+                           asm.tree.FrameNode
+                        ), _)) =>
+                           val lastLabel = {
+                              lastG
+                              .reverse
+                              .collectFirst({
+                                 case e @ (_ : asm.tree.LabelNode, _) =>
+                                    e
+                              })
+                              .get
+                           }
+                           (s0 :+ (lastG :+ nextItrItem ) ) :+ (
+                              Seq(
+                                 lastLabel,
+                                 nextItrItem, 
+                              )
+                           )
+                           
+                        case (s0 :+ lastG, nextItem @ (nextInstr, _) ) if (!(nextInstr.isInstanceOf[XBlockSeparativeNode] ) ) =>
+                           s0 :+ (lastG :+ nextItem )
+                           
+                        case (Seq(), nextItem) =>
+                           Vector() :+ Seq(nextItem )
+
+                     })
+                     
+                  }
 
                }
                
@@ -581,6 +625,23 @@ def wsnImpl(
                   
                )
 
+               
+               o println ""
+               
+               o println s"    let S_exception = null ;"
+
+               o println ""
+
+               o println s"    loop1 :  "
+               o println s"    for (let nextBranch = 1;; ) {  "
+               o println s"       "
+               o println s"      switch ([nextBranch, /* clear it */ nextBranch = 0][0] ) {   "
+               o println s"       "
+
+               def printGoToBranchId(id: Int): Unit = {
+                  o println s"        nextBranch = $id ; continue loop1 ; "
+               }
+
                ({
 
                   (code.nn : asm.tree.MethodNode)
@@ -589,8 +650,81 @@ def wsnImpl(
                   .toSeq
                   .zipWithIndex
                   
-               }, preInstrItrLoopStackState1 ).swap
-               .xCompileInstructionListAndEmit()
+               })
+               .splitAtLabels()
+               .zipWithIndex.map((v, i) => (1 + i, v ) )
+               .map((currentBranchId, instructions) => {
+                  val opdState10 = (
+                     preInstrItrLoopStackState1
+                  )
+                  val startingFrameO = (
+                     instructions
+                     .collectFirst({ case (e : asm.tree.FrameNode, _) => e })
+                  )
+                  val startingStackItems1 = ({
+                     import language.unsafeNulls
+                     import scala.jdk.CollectionConverters.*
+
+                     startingFrameO
+                     .flatMap(e => Option(e.stack.asScala) )
+                     .toList
+                     .flatten
+
+                  })
+                  // TODO
+                  o println s"      case $currentBranchId :   "
+                  o println s"      { "
+                  
+                  val opdState11 = ({
+
+                     startingStackItems1
+                     .foldLeft[Jblt.OpdState[FqnStronumericPair[?] ]](opdState10)((opdState10, _) => {
+                        // TODO
+
+                        val opdState11 = {
+                           opdState10.afterLdcOpaque
+                        }
+
+                        val catchLocalVarName = (
+                           opdState11
+                           .opdStack
+                           .fromRightLeftwards.head
+                           .toSingleWordNameString()
+                        )
+
+                        o println s"        const ${catchLocalVarName } = [S_exception, /* clear it */ S_exception = null ][0] ;  "
+                        
+                        opdState11
+                     } )
+                     
+                  })
+                  
+                  o println s"         "
+                  o println s"        /* ${instructions.length } instructions */ "
+                  o println s"    "
+                  // o println s"        throw ;  "
+                  (instructions, opdState11 ).swap
+                  .xCompileInstructionListAndEmit()
+                  o println s"    "
+                  // o println s"        throw ;  "
+                  printGoToBranchId(id = currentBranchId + 1 )
+                  o println s"      throw Error(`[branch $currentBranchId] must reassign 'nextBranch' and 'continue' ; can't fall-thru `) ; "
+                  o println s"    "
+                  o println s"      } "
+                  o println s"       "
+               })
+               
+               o println s"       "
+               o println s"      default :  "
+               o println "        throw Error(`invalid branch ID: ${nextBranch } `) ; "
+               o println s"       "
+
+               // TODO
+               o println s"      }   "
+               o println s"       "
+               o println "      throw Error(`must reassign 'nextBranch' and 'continue' `) ; "
+               o println s"     "
+               o println s"    }"
                
                }
 
