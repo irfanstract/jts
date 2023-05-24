@@ -383,6 +383,7 @@ def wsnImpl(
                   }
                   if (
                      false
+                     || instr.isInstanceOf[asm.tree.LabelNode]
                      || ({
                         import cbsq.meta.asm.jvm.opcodeNameTable
                         val GivenTypedLoadOrStore = "(\\w)(LOAD|STORE)".r
