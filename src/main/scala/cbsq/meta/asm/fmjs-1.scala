@@ -385,12 +385,12 @@ def wsnImpl(
                      false
                      || ({
                         import cbsq.meta.asm.jvm.opcodeNameTable
+                        val GivenTypedLoadOrStore = "(\\w)(LOAD|STORE)".r
+                        
                         opcodeNameTable(instr.getOpcode() ) match {
 
-                           case s =>
-                              "\\w(LOAD|STORE)".r
-                              .findAllIn(s)
-                              .nonEmpty
+                           case GivenTypedLoadOrStore(_*) =>
+                              true
 
                            case _ =>
                               false
