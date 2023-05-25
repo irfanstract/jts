@@ -610,7 +610,7 @@ class wsnImplCtx1(
                                        (
                                           e ,
                                           {
-                                             MethodDescriptorImpl1.Bds(descriptor = s"(${type1}${type1})Ljava/lang/Object;", signature0 = null )
+                                             MethodDescriptorImpl1.Bds.ofAlreadyErased(s"(${type1}${type1})Ljava/lang/Object;" )
                                           } ,
                                        )
                                           
@@ -618,7 +618,7 @@ class wsnImplCtx1(
                                        (
                                           e ,
                                           {
-                                             MethodDescriptorImpl1.Bds(descriptor = s"(${type1})Ljava/lang/Object;", signature0 = null )
+                                             MethodDescriptorImpl1.Bds.ofAlreadyErased(s"(${type1})Ljava/lang/Object;" )
                                           } ,
                                        )
                                           
@@ -730,7 +730,7 @@ class wsnImplCtx1(
                                     odst = (
                                        MethodDescriptorImpl1(access = 0x0, name = "whichMethodDoesntMatter", descriptor0 = {
                                           import language.unsafeNulls
-                                          MethodDescriptorImpl1.Bds(descriptor = c.desc, signature0 = null )
+                                          MethodDescriptorImpl1.Bds.ofAlreadyErased(c.desc )
                                        })
                                     ) ,
                                     opdState0 = opdState0 ,
