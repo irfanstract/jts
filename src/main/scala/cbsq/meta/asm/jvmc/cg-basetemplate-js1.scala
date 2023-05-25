@@ -595,13 +595,44 @@ class wsnImplCtx1(
                                  s"/* $opcodeName */ (void 0)"
                                  .popoffPrependedWithDef(n = n )
 
-                              case e @ ("MONITORENTER" | "MONITOREXIT") =>
-                                 val n = {
-                                    1
+                              case MonitorEntryOrExit(e0) =>
+                                 val e = {
+                                    e0 toLowerCase(java.util.Locale.ENGLISH )
                                  }
-                                 // TODO
-                                 s"/* $opcodeName */ (void 0)"
-                                 .popoffPrependedWithDef(n = n )
+
+                                 import cbsq.meta.namespacing.{byLowerCasedIdentifiers, concatToCamelCase }
+
+                                 import cbsq.meta.util.IntendedLocale
+                                 given IntendedLocale = {
+                                    IntendedLocale(java.util.Locale.ROOT)
+                                 }
+                                 
+                                 ({
+                                    import language.unsafeNulls
+                                    toXJsString21.apply(
+                                       // opdState0 = opdState0,
+                                       // documentOriginalSrc = false ,
+
+                                       opc = asm.Opcodes.INVOKESTATIC,
+                                       // async = false ,
+                                       rct = asm.Type.getObjectType("java/lang/Thread") ,
+                                       odst = (
+                                          MethodDescriptorImpl1(access = 0x0, name = {
+                                             byLowerCasedIdentifiers(IndexedSeq("monitor", e ) )
+                                             .concatToCamelCase()
+                                             
+                                          }, descriptor0 = {
+                                             MethodDescriptorImpl1.Bds.ofAlreadyErased("(Ljava/lang/Object;)V" )
+                                          } )
+                                       ) ,
+                                       opdState0 = opdState0 ,
+
+                                       async = false ,
+                                       
+                                       documentOriginalSrc = false ,
+                                       
+                                    )
+                                 })
 
                               case e @ (YBiOp(_*) | YUnrOp(_*)) =>
                                  val (name, desc) = {
