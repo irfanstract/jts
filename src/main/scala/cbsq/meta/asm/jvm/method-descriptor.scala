@@ -177,6 +177,12 @@ object MethodDescriptorImpl1
          )
       }
 
+      def ofAlreadyErased(
+         descriptor : String ,
+      ) : Bds = {
+         new Bds(descriptor = descriptor , signature = descriptor )
+      }
+
    }
    
    val SIMPLENAME = ({
