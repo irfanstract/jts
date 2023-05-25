@@ -624,7 +624,7 @@ class wsnImplCtx1(
 
                                        opc = asm.Opcodes.INVOKESTATIC,
                                        // async = false ,
-                                       rct = asm.Type.getObjectType("Ljava/lang/ICmpIntrinsics;") ,
+                                       rct = asm.Type.getObjectType("java/lang/ICmpIntrinsics") ,
                                        odst = (
                                           MethodDescriptorImpl1(access = 0x0, name = e, descriptor0 = desc)
                                        ) ,
