@@ -572,6 +572,7 @@ class wsnImplCtx1(
                         case c: asm.tree.InsnNode =>
                            val ReturnStmtOpName = "(\\w+)RETURN".r
                            val VConstYOpName = "(\\w)CONST_(.+)".r
+                           val MonitorEntryOrExit = "MONITOR(ENTER|EXIT)".r
                            val opcodeName = (
                               opcodeNameTable.apply(c.getOpcode())
                            )
